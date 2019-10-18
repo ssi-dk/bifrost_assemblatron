@@ -2,8 +2,6 @@
 import os
 from bifrostlib import datahandling
 
-configfile: "../config.yaml"  # Relative to run directory
-
 
 bifrost_sampleComponentObj = datahandling.SampleComponentObj()
 sample_name, component_name, dockerfile, options, bifrost_resources = bifrost_sampleComponentObj.load(config["sample_id"], config["component_id"])
