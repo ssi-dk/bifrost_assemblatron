@@ -72,7 +72,7 @@ rule setup__filter_reads_with_bbduk:
     params:
         adapters = bifrost_resources["adapters_fasta"]
     shell:
-        "bbduk.sh threads={threads} -Xmx{resources.memory_in_GB}G in={input.reads[0]} in2={input.reads[1]} out={output.filtered_reads} ref={params.adapters} ktrim=r k=23 mink=11 hdist=1 tbo qtrim=r minlength=30 json=t 1> {log.out_file} 2> {log.err_file}"
+        "bbduk.sh in={input.reads[0]} in2={input.reads[1]} out={output.filtered_reads} ref={params.adapters} ktrim=r k=23 mink=11 hdist=1 tbo qtrim=r minlength=30 json=t 1> {log.out_file} 2> {log.err_file}"
 
 
 rule_name = "assembly__skesa"
@@ -91,7 +91,7 @@ rule assembly__skesa:
     output:
         contigs = rules.setup.params.folder + "/contigs.fasta"
     shell:
-        "skesa --cores {threads} --memory {resources.memory_in_GB} --use_paired_ends --fastq {input.filtered_reads} --contigs_out {output.contigs} 1> {log.out_file} 2> {log.err_file}"
+        "skesa --use_paired_ends --fastq {input.filtered_reads} --contigs_out {output.contigs} 1> {log.out_file} 2> {log.err_file}"
 
 
 rule_name = "assembly_check__quast_on_contigs"
@@ -110,7 +110,7 @@ rule assembly_check__quast_on_contigs:
     output:
         quast = directory(rules.setup.params.folder + "/quast")
     shell:
-        "quast.py --threads {threads} {input.contigs} -o {output.quast} 1> {log.out_file} 2> {log.err_file}"
+        "quast.py {input.contigs} -o {output.quast} 1> {log.out_file} 2> {log.err_file}"
 
 
 rule_name = "assembly_check__sketch_on_contigs"
@@ -129,7 +129,7 @@ rule assembly_check__sketch_on_contigs:
     output:
         sketch = rules.setup.params.folder + "/contigs.sketch"
     shell:
-        "bbsketch.sh threads={threads} -Xmx{resources.memory_in_GB}G in={input.contigs} out={output.sketch} 1> {log.out_file} 2> {log.err_file}"
+        "bbsketch.sh in={input.contigs} out={output.sketch} 1> {log.out_file} 2> {log.err_file}"
 
 
 rule_name = "post_assembly__stats"
@@ -150,7 +150,7 @@ rule post_assembly__stats:
     output:
         stats = touch(rules.setup.params.folder + "/post_assermbly__stats")
     shell:
-        "stats.sh -Xmx{resources.memory_in_GB}G {input.contigs} 1> {log.out_file} 2> {log.err_file}"
+        "stats.sh {input.contigs} 1> {log.out_file} 2> {log.err_file}"
 
 
 rule_name = "post_assembly__mapping"
@@ -170,7 +170,7 @@ rule post_assembly__mapping:
     output:
         mapped = temp(rules.setup.params.folder + "/contigs.sam")
     shell:
-        "minimap2 -t {threads} --MD -ax sr {input.contigs} {input.filtered_reads} 1> {output.mapped} 2> {log.err_file}"
+        "minimap2 --MD -ax sr {input.contigs} {input.filtered_reads} 1> {output.mapped} 2> {log.err_file}"
 
 
 rule_name = "post_assembly__samtools_stats"
@@ -189,7 +189,7 @@ rule post_assembly__samtools_stats:
     output:
         stats = rules.setup.params.folder + "/contigs.stats",
     shell:
-        "samtools stats -@ {threads} {input.mapped} 1> {output.stats} 2> {log.err_file}"
+        "samtools stats {input.mapped} 1> {output.stats} 2> {log.err_file}"
 
 
 rule_name = "post_assembly__pileup"
@@ -209,7 +209,7 @@ rule post_assembly__pileup:
         coverage = temp(rules.setup.params.folder + "/contigs.cov"),
         pileup = rules.setup.params.folder + "/contigs.pileup"
     shell:
-        "pileup.sh threads={threads} -Xmx{resources.memory_in_GB}G in={input.mapped} basecov={output.coverage} out={output.pileup} 1> {log.out_file} 2> {log.err_file}"
+        "pileup.sh in={input.mapped} basecov={output.coverage} out={output.pileup} 1> {log.out_file} 2> {log.err_file}"
 
 
 rule_name = "summarize__depth"
@@ -251,7 +251,7 @@ rule post_assembly__call_variants:
     output:
         variants = temp(rules.setup.params.folder + "/contigs.vcf"),
     shell:
-        "callvariants.sh threads={threads} -Xmx{resources.memory_in_GB}G in={input.mapped} vcf={output.variants} ref={input.contigs} ploidy=1 clearfilters 1> {log.out_file} 2> {log.err_file}"
+        "callvariants.sh in={input.mapped} vcf={output.variants} ref={input.contigs} ploidy=1 clearfilters 1> {log.out_file} 2> {log.err_file}"
 
 
 rule_name = "summarize__variants"
@@ -294,7 +294,7 @@ rule post_assembly__annotate:
         prokka = temp(directory(rules.setup.params.folder + "/prokka"))
     shell:
         """ 
-        prokka --cpus {threads} --centre XXX --compliant --outdir {params.prokka} {input.contigs} 1> {log.out_file} 2> {log.err_file};
+        prokka --centre XXX --compliant --outdir {params.prokka} {input.contigs} 1> {log.out_file} 2> {log.err_file};
         mv {params.prokka}/*.gff {output.gff};
         """ 
 
