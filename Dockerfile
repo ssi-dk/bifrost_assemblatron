@@ -1,5 +1,5 @@
 FROM \
-    ssidk/bifrost-base:2.0
+    ssidk/bifrost-base:2.0.5
 
 LABEL \
     name="bifrost-assemblatron" \
@@ -15,10 +15,14 @@ RUN \
     conda install -yq -c conda-forge -c bioconda -c defaults samtools==1.9; \
     conda install -yq -c conda-forge -c bioconda -c defaults cyvcf2==0.11.4; \
     conda install -yq -c conda-forge -c bioconda -c defaults prokka==1.14.0; \
-    pip install -q quast==5.0.2; \
-    # In base image
-    cd /bifrost_resources; \
-    wget -q https://raw.githubusercontent.com/ssi-dk/bifrost/master/setup/adapters.fasta;
+    conda install -yq -c conda-forge -c bioconda -c defaults quast==5.0.2; \
+    cd /bifrost; \
+    git clone https://github.com/ssi-dk/bifrost-assemblatron.git assemblatron; \
 
-ENTRYPOINT \
-    ["/bifrost_resources/docker_umask_002.sh"]
+ADD \
+    https://raw.githubusercontent.com/ssi-dk/bifrost/master/setup/adapters.fasta /bifrost_resources/
+RUN \
+    chmod +r /bifrost_resources/adapters.fasta
+
+ENTRYPOINT [ "/bifrost/min_read_check/launcher.py"]
+CMD [ "/bifrost/min_read_check/launcher.py", "--help"]
