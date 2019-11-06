@@ -8,13 +8,13 @@ import subprocess
 import os
 from bifrostlib import datahandling
 
-COMPONENT = datahandling.load_yaml(os.path.join(os.path.dirname(__file__), 'config.yaml'))
+COMPONENT: dict = datahandling.load_yaml(os.path.join(os.path.dirname(__file__), 'config.yaml'))
 
 def parse_args():
     """
     Arg parsing via argparse
     """
-    description = (
+    description: str = (
         f"-Description------------------------------------\n"
         f"{COMPONENT['details']['description']}"
         f"------------------------------------------------\n\n"
@@ -27,7 +27,7 @@ def parse_args():
         f"    -id <sample_id>\n"
         f"************************************************\n"
     )
-    parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser: argparse.ArgumentParser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-id', '--sample_id',
                         action='store',
                         type=str,
@@ -38,10 +38,10 @@ def parse_args():
     parser.add_argument('-info', '--info',
                         action='store_true',
                         help='Provides basic information on component')
-    args = parser.parse_args()
+    args: argparse.Namespace = parser.parse_args()
 
     if not datahandling.check_db_connection_exists():
-        message = (
+        message: str = (
             f"ERROR: Connection to DB not establised.\n"
             f"please ensure env variable BIFROST_DB_KEY is set and set properly\n"
         )
@@ -62,7 +62,7 @@ def show_info():
     """
     Shows information about the component
     """
-    message = (
+    message: str = (
         f"Component: {COMPONENT['name']}\n"
         f"Version: {COMPONENT['version']}\n"
         f"Details: {json.dumps(COMPONENT['details'], indent=4)}\n"
@@ -71,14 +71,14 @@ def show_info():
 
 
 def install_component():
-    component = datahandling.get_components(component_names=[COMPONENT['name']], component_versions=[COMPONENT['version']])
+    component: list[dict] = datahandling.get_components(component_names=[COMPONENT['name']], component_versions=[COMPONENT['version']])
     if len(component) == 1:
         print(f"Component has already been installed")
     elif len(component) > 1:
         print(f"Component exists multiple times in DB, please contact an admin to fix this in order to proceed")
     else:
         datahandling.post_component(COMPONENT)
-        component = datahandling.get_components(component_names=[COMPONENT['name']], component_versions=[COMPONENT['version']])
+        component: list[dict] = datahandling.get_components(component_names=[COMPONENT['name']], component_versions=[COMPONENT['version']])
         if len(component) != 1:
             print(f"Error with installation of {COMPONENT['name']} v:{COMPONENT['version']} \n")
             exit()
@@ -88,14 +88,14 @@ def run_sample(args: object):
     """
     Runs sample ID through snakemake pipeline
     """
-    sample = datahandling.get_samples(sample_ids=[args.sample_id])
-    component = datahandling.get_components(component_names=[COMPONENT['name']], component_versions=[COMPONENT['version']])
+    sample: list[dict] = datahandling.get_samples(sample_ids=[args.sample_id])
+    component: list[dict] = datahandling.get_components(component_names=[COMPONENT['name']], component_versions=[COMPONENT['version']])
     if len(component) == 0:
         print(f"component not found in DB, would you like to install it (Y/N)?:")
-        install = input()
-        if str(install).upper() == "Y":
+        install: string = input()
+        if install.upper() == "Y":
             datahandling.post_component(COMPONENT)
-            component = datahandling.get_components(component_names=[COMPONENT['name']], component_versions=[COMPONENT['version']])
+            component: list[dict] = datahandling.get_components(component_names=[COMPONENT['name']], component_versions=[COMPONENT['version']])
             if len(component) != 1:
                 print(f"Error with installation of {COMPONENT['name']} v:{COMPONENT['version']} \n")
                 exit()
@@ -113,12 +113,13 @@ def run_sample(args: object):
         print(f"Error with component_id")
     else:
         print(f"snakemake -s /bifrost/{COMPONENT['name']}/pipeline.smk --config sample_id={str(sample[0]['_id'])} component_id={str(component[0]['_id'])}")
-        process = subprocess.Popen(f"snakemake -s /bifrost/{COMPONENT['name']}/pipeline.smk --config sample_id={str(sample[0]['_id'])} component_id={str(component[0]['_id'])}",
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.STDOUT,
-                                   shell=True)
-        process_out, process_err = process.communicate()
-        print(process_out, process_err)
+        process: (str, str) = subprocess.Popen(
+            f"snakemake -s /bifrost/{COMPONENT['name']}/pipeline.smk --config sample_id={str(sample[0]['_id'])} component_id={str(component[0]['_id'])}",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            shell=True
+        ).communicate()
+        print(process[0], process(1))
 
 
 if __name__ == '__main__':
