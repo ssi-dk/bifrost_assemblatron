@@ -3,7 +3,7 @@ FROM ssidk/bifrost-base:2.0.5
 ARG version="2.0.5"
 ARG last_updated="31/07/2019"
 ARG name="assemblatron"
-ARG full_name="bifrost-assemblatron"
+ARG full_name="bifrost-${name}"
 
 LABEL \
     name=${name} \
@@ -24,20 +24,16 @@ RUN \
     pip install -q quast==5.0.2; 
 #- Tools to install:end ----------------------------------------------------------------------------
 
-#- Source code:start -------------------------------------------------------------------------------
-RUN cd /bifrost && \
-    git clone --branch ${version} https://github.com/ssi-dk/${full_name}.git ${name};
-#- Source code:end ---------------------------------------------------------------------------------
-
 #- Additional resources (files/DBs): start ---------------------------------------------------------
 RUN cd /bifrost_resources && \
     wget -q https://raw.githubusercontent.com/ssi-dk/bifrost/master/setup/adapters.fasta && \
     chmod +r adapters.fasta
 #- Additional resources (files/DBs): end -----------------------------------------------------------
 
-#- Additional initialization: start ----------------------------------------------------------------
-# None
-#- Additional initialization: end ------------------------------------------------------------------
+#- Source code:start -------------------------------------------------------------------------------
+RUN cd /bifrost && \
+    git clone --branch ${version} https://github.com/ssi-dk/${full_name}.git ${name};
+#- Source code:end ---------------------------------------------------------------------------------
 
 #- Set up entry point:start ------------------------------------------------------------------------
 ENV PATH /bifrost/${name}/:$PATH

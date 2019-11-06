@@ -66,6 +66,8 @@ def show_info():
         f"Component: {COMPONENT['name']}\n"
         f"Version: {COMPONENT['version']}\n"
         f"Details: {json.dumps(COMPONENT['details'], indent=4)}\n"
+        f"Requirements: {json.dumps(COMPONENT['requirements'], indent=4)}\n"
+        f"Output files: {json.dumps(COMPONENT['db_values_changes']['files'], indent=4)}\n"
     )
     print(message)
 
