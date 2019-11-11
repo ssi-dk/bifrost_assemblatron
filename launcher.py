@@ -6,6 +6,7 @@ import argparse
 import json
 import subprocess
 import os
+import sys
 import traceback
 from bifrostlib import datahandling
 
@@ -119,15 +120,11 @@ def run_sample(args: object):
         try:
             process: subprocess.Popen = subprocess.Popen(
                 f"snakemake -s /bifrost/{COMPONENT['name']}/pipeline.smk --config sample_id={str(sample[0]['_id'])} component_id={str(component[0]['_id'])}",
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
+                stdout=sys.stdout,
+                stderr=sys.stderr,
                 shell=True
             )
-            output_streams: (str, str) = process.communicate()
-            if process.poll() != 0:
-                print("Error in running component, please see logs")
-            else:
-                print(output_streams)
+            process.communicate()
         except:
             print(traceback.format_exc())
 
