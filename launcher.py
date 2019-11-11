@@ -6,6 +6,7 @@ import argparse
 import json
 import subprocess
 import os
+import traceback
 from bifrostlib import datahandling
 
 COMPONENT: dict = datahandling.load_yaml(os.path.join(os.path.dirname(__file__), 'config.yaml'))
@@ -128,7 +129,7 @@ def run_sample(args: object):
             else:
                 print(output_streams)
         except:
-            print()
+            print(traceback.format_exc())
 
 
 if __name__ == '__main__':
