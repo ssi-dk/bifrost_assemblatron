@@ -95,16 +95,11 @@ def run_sample(args: object):
     sample: list[dict] = datahandling.get_samples(sample_ids=[args.sample_id])
     component: list[dict] = datahandling.get_components(component_names=[COMPONENT['name']], component_versions=[COMPONENT['version']])
     if len(component) == 0:
-        print(f"component not found in DB, would you like to install it (Y/N)?:")
-        install: string = input()
-        if install.upper() == "Y":
-            datahandling.post_component(COMPONENT)
-            component: list[dict] = datahandling.get_components(component_names=[COMPONENT['name']], component_versions=[COMPONENT['version']])
-            if len(component) != 1:
-                print(f"Error with installation of {COMPONENT['name']} v:{COMPONENT['version']} \n")
-                exit()
-        else:
-            print(f"To continue please install the component")
+        print(f"component not found in DB, installing it:")
+        datahandling.post_component(COMPONENT)
+        component: list[dict] = datahandling.get_components(component_names=[COMPONENT['name']], component_versions=[COMPONENT['version']])
+        if len(component) != 1:
+            print(f"Error with installation of {COMPONENT['name']} v:{COMPONENT['version']} \n")
             exit()
 
     if len(sample) == 0:
