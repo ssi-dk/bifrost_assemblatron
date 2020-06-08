@@ -22,7 +22,7 @@ RUN \
     # Note prokka has a 1 year deadline due to tbl2asn. 1.14.6 was made available Feb 20th
     conda install -yq -c conda-forge -c bioconda -c defaults prokka==1.14.6; \
     # Don't use conda for Quast they cap the python version which causes issues with install
-    pip install -q quast==5.0.2; \
+    pip install -q quast==5.0.2;
 #- Tools to install:end ----------------------------------------------------------------------------
 
 #- Additional resources (files/DBs): start ---------------------------------------------------------
