@@ -19,15 +19,16 @@ RUN \
     conda install -yq -c conda-forge -c bioconda -c defaults minimap2==2.17; \
     conda install -yq -c conda-forge -c bioconda -c defaults samtools==1.9; \
     conda install -yq -c conda-forge -c bioconda -c defaults cyvcf2==0.11.4; \
-    conda install -yq -c conda-forge -c bioconda -c defaults prokka==1.14.0; \
+    # Note prokka has a 1 year deadline due to tbl2asn. 1.14.6 was made available Feb 20th
+    conda install -yq -c conda-forge -c bioconda -c defaults prokka==1.14.6; \
     # Don't use conda for Quast they cap the python version which causes issues with install
-    pip install -q quast==5.0.2; 
+    pip install -q quast==5.0.2; \
 #- Tools to install:end ----------------------------------------------------------------------------
 
 #- Additional resources (files/DBs): start ---------------------------------------------------------
 RUN cd /bifrost_resources && \
     wget -q https://raw.githubusercontent.com/ssi-dk/bifrost/master/setup/adapters.fasta && \
-    chmod +r adapters.fasta
+    chmod +r adapters.fasta;
 #- Additional resources (files/DBs): end -----------------------------------------------------------
 
 #- Source code:start -------------------------------------------------------------------------------
