@@ -26,9 +26,7 @@ RUN \
 #- Tools to install:end ----------------------------------------------------------------------------
 
 #- Additional resources (files/DBs): start ---------------------------------------------------------
-RUN cd /bifrost_resources && \
-    wget -q https://raw.githubusercontent.com/ssi-dk/bifrost/master/setup/adapters.fasta && \
-    chmod +r adapters.fasta;
+# adapters.fasta included with src
 #- Additional resources (files/DBs): end -----------------------------------------------------------
 
 #- Source code:start -------------------------------------------------------------------------------
