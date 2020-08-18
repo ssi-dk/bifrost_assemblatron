@@ -1,15 +1,16 @@
+
 #-Basic info----------------------------------------------------------------------------------------
-name: assemblatron
-version: 2.0.7
+display_name: assemblatron
+name: assemblatron__unspecified__unspecified
+version:
+  schema: 2.0
+  code: unspecified
+  resource: unspecified
 #---------------------------------------------------------------------------------------------------
 
 #-Details-------------------------------------------------------------------------------------------
 details:
-  category: denovo_assembly
-  schema_version: 2.0
   target: sample
-  type: pipeline
-  recommendation: required
   description: >
     This does de-novo assembly on a sample and then maps the reads back against the denovo assembly
     for variant calling. In the process it gathers metrics on many aspects for the use of QC. This
@@ -17,8 +18,14 @@ details:
     to use these contigs for downstream analysis.
 #---------------------------------------------------------------------------------------------------
 
-#-Docker location-----------------------------------------------------------------------------------
-dockerfile: &dockerfile "docker://ssidk/bifrost-assemblatron:2.0.7"
+#-Category info-------------------------------------------------------------------------------------
+category: [denovo_assembly]
+#---------------------------------------------------------------------------------------------------
+
+#-Install-------------------------------------------------------------------------------------------
+install:
+  path: # Set by install program
+  dockerfile: docker://ssidk/bifrost_assemblatron:unspecified__unspecified
 #---------------------------------------------------------------------------------------------------
 
 #-Options-------------------------------------------------------------------------------------------
@@ -28,7 +35,7 @@ options:
 
 #-Required resource files---------------------------------------------------------------------------
 resources:
-  adapters_fasta: "resources/adapters.fasta"
+  adapters_fasta: "/bifrost_assemblatron/resources/adapters.fasta"
 #---------------------------------------------------------------------------------------------------
 
 #-Requirements to run component---------------------------------------------------------------------
