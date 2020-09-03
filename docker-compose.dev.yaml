@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+  python:
+    build:
+      context: .
+      args:
+        BUILD_ENV: dev
+    env_file:
+      - .secrets/mongodb_dev_key.env
+  python-tests:
+    build:
+      context: .
+      args:
+        BUILD_ENV: dev
+    env_file:
+      - .secrets/mongodb_dev_key.env
+    working_dir: /bifrost_assemblatron/
+    volumes:
+      - ./bifrost_assemblatron:/bifrost_assemblatron/bifrost_assemblatron
+      - ./tests:/bifrost_assemblatron/tests
+      - ../../lib/bifrostlib:/bifrostlib
+      # - ../bifrost_run_launcher/bifrost_run_launcher:/bifrost_run_launcher/bifrost_run_launcher
+    entrypoint: watchmedo auto-restart --recursive --pattern="*.py" --directory="/bifrost_assemblatron" -- pytest --verbose
+    depends_on:
+      - python

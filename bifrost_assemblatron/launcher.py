@@ -12,7 +12,7 @@ from bifrostlib import datahandling
 
 COMPONENT: dict = datahandling.load_yaml(os.path.join(os.path.dirname(__file__), 'config.yaml'))
 
-def parse_args():
+def parser(args):
     """
     Arg parsing via argparse
     """
@@ -23,25 +23,33 @@ def parse_args():
         f"*Run command************************************\n"
         f"docker run \ \n"
         f" -e BIFROST_DB_KEY=mongodb://<user>:<password>@<server>:<port>/<db_name> \ \n"
-        f" -v <input_path>:/input \ \n"
-        f" -v <output_path>:/output \ \n"
-        f" {COMPONENT['dockerfile']} \ \n"
-        f"    -id <sample_id>\n"
+        f" {COMPONENT['install']['dockerfile']} \ \n"
         f"************************************************\n"
     )
     parser: argparse.ArgumentParser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('--install',
+                        action='store_true',
+                        help='Install/Force reinstall component')
+    parser.add_argument('-info', '--info',
+                        action='store_true',
+                        help='Provides basic information on component')
+    parser.add_argument('-out', '--outdir',
+                        default=".",
+                        help='Output directory')
     parser.add_argument('-id', '--sample_id',
                         action='store',
                         type=str,
                         help='Sample ID of sample in bifrost, sample has already been added to the bifrost DB')
-    parser.add_argument('--install',
-                        action='store_true',
-                        help='Install component')
-    parser.add_argument('-info', '--info',
-                        action='store_true',
-                        help='Provides basic information on component')
-    args: argparse.Namespace = parser.parse_args()
 
+    try:
+        options: argparse.Namespace = parser.parse_args(args)
+    except:
+        parser.print_help()
+        sys.exit(0)
+
+    return options
+
+def run_program(args: argparse.Namespace):
     if not datahandling.check_db_connection_exists():
         message: str = (
             f"ERROR: Connection to DB not establised.\n"
@@ -50,7 +58,6 @@ def parse_args():
         print(message)
     else:
         print(datahandling.get_connection_info())
-
 
     if args.info:
         show_info()
@@ -75,16 +82,19 @@ def show_info():
 
 
 def install_component():
-    component: list[dict] = datahandling.get_components(component_names=[COMPONENT['name']], component_versions=[COMPONENT['version']])
-    if len(component) == 1:
-        print(f"Component has already been installed")
-    elif len(component) > 1:
+    component: list[dict] = datahandling.get_components(component_names=[COMPONENT['name']])
+    # if len(component) == 1:
+    #     print(f"Component has already been installed")
+    if len(component) > 1:
         print(f"Component exists multiple times in DB, please contact an admin to fix this in order to proceed")
     else:
+        #HACK: Installs based on your current directory currently. Should be changed to the directory your docker/singularity file is
+        #HACK: Removed install check so you can reinstall the component. Should do this in a nicer way
+        COMPONENT['install']['path'] = os.path.os.getcwd()
         datahandling.post_component(COMPONENT)
-        component: list[dict] = datahandling.get_components(component_names=[COMPONENT['name']], component_versions=[COMPONENT['version']])
+        component: list[dict] = datahandling.get_components(component_names=[COMPONENT['name']])
         if len(component) != 1:
-            print(f"Error with installation of {COMPONENT['name']} v:{COMPONENT['version']} \n")
+            print(f"Error with installation of {COMPONENT['name']} {len(component)}\n")
             exit()
 
 
@@ -92,15 +102,15 @@ def run_sample(args: object):
     """
     Runs sample ID through snakemake pipeline
     """
+    if not os.path.isdir(args.outdir):
+        os.makedirs(args.outdir)
+    os.chdir(args.outdir)
+
     sample: list[dict] = datahandling.get_samples(sample_ids=[args.sample_id])
-    component: list[dict] = datahandling.get_components(component_names=[COMPONENT['name']], component_versions=[COMPONENT['version']])
+    component: list[dict] = datahandling.get_components(component_names=[COMPONENT['name']])
     if len(component) == 0:
-        print(f"component not found in DB, installing it:")
-        datahandling.post_component(COMPONENT)
-        component: list[dict] = datahandling.get_components(component_names=[COMPONENT['name']], component_versions=[COMPONENT['version']])
-        if len(component) != 1:
-            print(f"Error with installation of {COMPONENT['name']} v:{COMPONENT['version']} \n")
-            exit()
+        print(f"component not found in DB, would you like to install it (Y/N)?:")
+        install_component()
 
     if len(sample) == 0:
         # Invalid sample id
@@ -111,10 +121,10 @@ def run_sample(args: object):
     elif len(component) != 1:
         print(f"Error with component_id")
     else:
-        print(f"snakemake -s /bifrost/{COMPONENT['name']}/pipeline.smk --config sample_id={str(sample[0]['_id'])} component_id={str(component[0]['_id'])}")
+        print(f"snakemake -s /bifrost_{COMPONENT['display_name']}/bifrost_{COMPONENT['display_name']}/pipeline.smk --config sample_id={str(sample[0]['_id'])} component_id={str(component[0]['_id'])}")
         try:
             process: subprocess.Popen = subprocess.Popen(
-                f"snakemake -s /bifrost/{COMPONENT['name']}/pipeline.smk --config sample_id={str(sample[0]['_id'])} component_id={str(component[0]['_id'])}",
+                f"snakemake -s /bifrost_{COMPONENT['display_name']}/bifrost_{COMPONENT['display_name']}/pipeline.smk --config sample_id={str(sample[0]['_id'])} component_id={str(component[0]['_id'])}",
                 stdout=sys.stdout,
                 stderr=sys.stderr,
                 shell=True
@@ -123,6 +133,9 @@ def run_sample(args: object):
         except:
             print(traceback.format_exc())
 
+def run():
+    args: argparse.Namespace = parser(sys.argv[1:])
+    run_program(args)
 
 if __name__ == '__main__':
-    parse_args()
+    run()

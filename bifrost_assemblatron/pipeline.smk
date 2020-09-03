@@ -225,7 +225,7 @@ rule summarize__depth:
         contig_depth_yaml = rules.setup.params.folder + "/contigs.sum.cov",
         binned_depth_yaml = rules.setup.params.folder + "/contigs.bin.cov"
     script:
-        os.path.join(os.path.dirname(workflow.snakefile), "scripts/rule__summarize_depth.py")
+        os.path.join(os.path.dirname(workflow.snakefile), "rule__summarize_depth.py")
 
 
 rule_name = "post_assembly__call_variants"
@@ -266,7 +266,7 @@ rule summarize__variants:
     output:
         variants_yaml = rules.setup.params.folder + "/contigs.variants",
     script:
-        os.path.join(os.path.dirname(workflow.snakefile), "scripts/rule__summarize_variants.py")
+        os.path.join(os.path.dirname(workflow.snakefile), "rule__summarize_variants.py")
 
 
 rule_name = "post_assembly__annotate"
