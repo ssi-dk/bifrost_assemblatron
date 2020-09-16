@@ -27,6 +27,7 @@ FROM continuumio/miniconda3:4.7.10 as build_prod
 ONBUILD ARG NAME
 ONBUILD WORKDIR ${NAME}
 ONBUILD COPY ${NAME} ${NAME}
+ONBUILD COPY resources resources
 ONBUILD COPY setup.py setup.py
 ONBUILD COPY requirements.txt requirements.txt
 ONBUILD RUN \
@@ -68,6 +69,7 @@ RUN \
 #- Additional resources (files/DBs): end -----------------------------------------------------------
 
 #- Set up entry point:start ------------------------------------------------------------------------
+ONBUILD WORKDIR ${NAME}
 ENTRYPOINT ["python3", "-m", "bifrost_assemblatron"]
 CMD ["python3", "-m", "bifrost_assemblatron", "--help"]
 #- Set up entry point:end --------------------------------------------------------------------------
