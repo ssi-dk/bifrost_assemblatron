@@ -16,10 +16,16 @@ def extract_contigs_sum_cov(sampleComponentObj):
                 total_contigs += 1
         results[key]["bin_contigs_at_{}x".format(bin_value)] = total_contigs
         results[key]["bin_length_at_{}x".format(bin_value)] = total_length
-        results[key]["bin_coverage_at_{}x".format(bin_value)] = float(total_depth / total_length)
+        if total_length == 0:
+            summary["bin_coverage_at_{}x".format(bin_value)] = 0
+        else:
+            results[key]["bin_coverage_at_{}x".format(bin_value)] = float(total_depth / total_length)
         summary["bin_contigs_at_{}x".format(bin_value)] = total_contigs
         summary["bin_length_at_{}x".format(bin_value)] = total_length
-        summary["bin_coverage_at_{}x".format(bin_value)] = float(total_depth / total_length)
+        if total_length == 0:
+            summary["bin_coverage_at_{}x".format(bin_value)] = 0
+        else:
+            summary["bin_coverage_at_{}x".format(bin_value)] = float(total_depth / total_length)
     return (summary, results)
 
 
