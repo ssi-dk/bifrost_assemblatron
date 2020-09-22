@@ -2,7 +2,7 @@
 #-Basic info----------------------------------------------------------------------------------------
 display_name: assemblatron
 #name is compound of display_name, code version, resource version
-name: assemblatron__2.1.0__NA
+name: &name assemblatron__2.1.0__NA
 version:
   schema: 2.0
   code: 2.1.0
