@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='bifrost_assemblatron',
-    version='temp',
+    #version is unused as this isn't a pypi installable package,
     url='https://github.com/ssi-dk/bifrost_assemblatron',
 
     # Author details
