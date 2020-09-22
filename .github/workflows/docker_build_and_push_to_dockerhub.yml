@@ -27,12 +27,6 @@ jobs:
         repository: ssidk/${{ env.REPOSITORY_NAME }}
         tags: dev
         build_args: BUILD_ENV=dev,CODE_VERSION=dev,RESOURCE_VERSION=${{ env.RESOURCE_VERSION }}
-    - name: Tag commit
-      uses: tvdias/github-tagger@v0.0.1
-      if: github.ref == 'refs/heads/dev'
-      with:
-        repo-token: "${{ secrets.GITHUB_TOKEN }}"
-        tag: dev__${{ env.RESOURCE_VERSION }}
     - name: Build and push Docker images (to latest)
       id: buildmaster
       if: github.ref == 'refs/heads/master'
