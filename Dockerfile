@@ -1,10 +1,8 @@
 # This is intended to run in Github Actions
 # Arg can be set to dev for testing purposes
 ARG BUILD_ENV="prod"
-ARG NAME="bifrost_assemblatron"
-ARG CODE_VERSION="unspecified"
-ARG RESOURCE_VERSION="NA"
 ARG MAINTAINER="kimn@ssi.dk"
+ARG NAME="bifrost_assemblatron"
 
 # For dev build include testing modules via pytest done on github and in development.
 # Watchdog is included for docker development (intended method) and should preform auto testing 
@@ -17,8 +15,8 @@ ONBUILD ARG NAME
 ONBUILD COPY . /${NAME}
 ONBUILD WORKDIR /${NAME}
 ONBUILD RUN \
-    sed -i'' 's/<code_version>/'"${CODE_VERSION}"'/g' ${NAME}/config.yaml; \
-    sed -i'' 's/<resource_version>/'"${RESOURCE_VERSION}"'/g' ${NAME}/config.yaml; \
+    pip install yq; \
+    yq -Y -i '.version.code |= "dev"' ${NAME}/config.yaml; \
     pip install -r requirements.dev.txt;
 #- Source code (development):end--------------------------------------------------------------------
 
@@ -31,9 +29,6 @@ ONBUILD COPY resources resources
 ONBUILD COPY setup.py setup.py
 ONBUILD COPY requirements.txt requirements.txt
 ONBUILD RUN \
-    sed -i'' 's/<code_version>/'"${CODE_VERSION}"'/g' ${NAME}/config.yaml; \
-    sed -i'' 's/<resource_version>/'"${RESOURCE_VERSION}"'/g' ${NAME}/config.yaml; \
-    ls; \
     pip install -r requirements.txt
 #- Source code (productopm):end---------------------------------------------------------------------
 
@@ -43,8 +38,6 @@ ARG NAME
 LABEL \
     name=${NAME} \
     description="Docker environment for ${NAME}" \
-    code_version="${CODE_VERSION}" \
-    resource_version="${RESOURCE_VERSION}" \
     environment="${BUILD_ENV}" \
     maintainer="${MAINTAINER}"
 #- Use development or production to and add info: end---------------------------------------------

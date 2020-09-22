@@ -1,11 +1,12 @@
 
 #-Basic info----------------------------------------------------------------------------------------
 display_name: assemblatron
-name: assemblatron__unspecified__unspecified
+#name is compound of display_name, code version, resource version
+name: assemblatron__2.1.0__NA
 version:
   schema: 2.0
-  code: unspecified
-  resource: unspecified
+  code: 2.1.0
+  resource: NA
 #---------------------------------------------------------------------------------------------------
 
 #-Details-------------------------------------------------------------------------------------------
@@ -25,7 +26,7 @@ category: [denovo_assembly]
 #-Install-------------------------------------------------------------------------------------------
 install:
   path: # Set by install program
-  dockerfile: docker://ssidk/bifrost_assemblatron:unspecified__unspecified
+  dockerfile: docker://ssidk/bifrost_assemblatron
 #---------------------------------------------------------------------------------------------------
 
 #-Options-------------------------------------------------------------------------------------------

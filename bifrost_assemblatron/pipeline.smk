@@ -6,6 +6,7 @@ from bifrostlib import datahandling
 os.umask(0o2)
 bifrost_sampleComponentObj = datahandling.SampleComponentObj(config["sample_id"], config["component_id"])
 sample_name, component_name, dockerfile, options, bifrost_resources = bifrost_sampleComponentObj.load()
+bifrost_sampleComponentObj.path = os.path.join(os.getcwd(), component_name)
 bifrost_sampleComponentObj.started()
 
 
