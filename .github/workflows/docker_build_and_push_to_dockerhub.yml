@@ -1,7 +1,9 @@
 name: Build and push Docker images to Dockerhub
 on:
   push:
-
+    branches:
+      - master
+      - dev
 jobs:
   build-n-publish:
     name: Publish Docker 🐳 image 📦 to Dockerhub and create 🏷 for repo
@@ -27,7 +29,7 @@ jobs:
         build_args: BUILD_ENV=dev,CODE_VERSION=dev,RESOURCE_VERSION=${{ env.RESOURCE_VERSION }}
     - name: Tag commit
       uses: tvdias/github-tagger@v0.0.1
-      if: github.ref == 'refs/heads/master'
+      if: github.ref == 'refs/heads/dev'
       with:
         repo-token: "${{ secrets.GITHUB_TOKEN }}"
         tag: dev__${{ env.RESOURCE_VERSION }}
