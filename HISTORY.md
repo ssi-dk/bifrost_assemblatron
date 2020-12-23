@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v2_2_1] - 2020-12-17
 ### Notes
-Changes to use the 2_1_0 schema, organizational updates, and updates to tests to make this work.
+Changes to use the 2_1_0 schema, organizational updates, and updates to tests to make this work. Also updated the scheme for how the docker image is developed on to be from the root for local dev.
 
 ### Added
 - docs/
@@ -35,3 +35,7 @@ Changes to use the 2_1_0 schema, organizational updates, and updates to tests to
   - docker_build_and_push_to_dockerhub.yml
   - test_standard_workflow.yml
 ### Removed
+- test_1_standard_workflow.py
+- docker-compose.dev.yaml
+- docker-compose.yaml
+- requirements.dev.txt
