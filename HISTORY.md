@@ -17,6 +17,7 @@ Changes to use the 2_1_0 schema, organizational updates, and updates to tests to
   - test_simple.py
 - HISTORY.md
 - setup.cfg
+
 ### Changed
 - .dockerignore
 - Dockerfile
@@ -33,7 +34,8 @@ Changes to use the 2_1_0 schema, organizational updates, and updates to tests to
   - rule__summarize_variants.py
 - .github/workflows
   - docker_build_and_push_to_dockerhub.yml
-  - test_standard_workflow.yml
+  - test_standard_workflow.yml -> run_tests.yml
+
 ### Removed
 - test_1_standard_workflow.py
 - docker-compose.dev.yaml
