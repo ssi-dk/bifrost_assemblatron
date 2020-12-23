@@ -1,104 +1,137 @@
-from bifrostlib import datahandling
+from bifrostlib import common
+from bifrostlib.datahandling import Sample
+from bifrostlib.datahandling import Component
+from bifrostlib.datahandling import SampleComponentReference
+from bifrostlib.datahandling import SampleComponent
+from bifrostlib.datahandling import Category
+from typing import Dict
+import os
 
 
-def extract_contigs_sum_cov(sampleComponentObj):
-    summary, results, file_path, key = sampleComponentObj.start_data_extraction("contigs.sum.cov")
-    options = sampleComponentObj.get_options()
-    yaml = datahandling.load_yaml(file_path)
-    for bin_value in options["cov_bin_values"]:
-        total_length = 0
-        total_depth = 0
-        total_contigs = 0
-        for contig in yaml["contig_depth"]:
-            if yaml["contig_depth"][contig]["coverage"] >= float(bin_value):
-                total_length += yaml["contig_depth"][contig]["total_length"]
-                total_depth += yaml["contig_depth"][contig]["total_depth"]
-                total_contigs += 1
-        results[key]["bin_contigs_at_{}x".format(bin_value)] = total_contigs
-        results[key]["bin_length_at_{}x".format(bin_value)] = total_length
-        if total_length == 0:
-            summary["bin_coverage_at_{}x".format(bin_value)] = 0
-        else:
-            results[key]["bin_coverage_at_{}x".format(bin_value)] = float(total_depth / total_length)
-        summary["bin_contigs_at_{}x".format(bin_value)] = total_contigs
-        summary["bin_length_at_{}x".format(bin_value)] = total_length
-        if total_length == 0:
-            summary["bin_coverage_at_{}x".format(bin_value)] = 0
-        else:
-            summary["bin_coverage_at_{}x".format(bin_value)] = float(total_depth / total_length)
-    return (summary, results)
+def extract_contigs_sum_cov(denovo_assembly: Category, mapping_qc: Category, results: Dict, component_name: str) -> None:
+    file_name = "contigs.sum.cov"
+    file_key = common.json_key_cleaner(file_name)
+    file_path = os.path.join(component_name, file_name)
+
+    yaml = common.get_yaml(file_path)
+    contig_summary_yaml = yaml["contig_depth"]
+
+    # For x1
+    number_contigs = 0
+    length_contigs = 0
+    depth_contigs = 0
+    for contig in contig_summary_yaml:
+        number_contigs += 1
+        length_contigs += contig_summary_yaml[contig]["total_length"] 
+        depth_contigs += contig_summary_yaml[contig]["total_depth"]
+    denovo_assembly["summary"]["contigs"] = number_contigs
+    denovo_assembly["summary"]["length"] = length_contigs
+    denovo_assembly["summary"]["depth"] = float(depth_contigs/length_contigs)
+    
+    # For x10
+    number_contigs = 0
+    length_contigs = 0
+    depth_contigs = 0
+    for contig in contig_summary_yaml:
+        if contig_summary_yaml[coverage] >= float(10):
+            number_contigs += 1
+            length_contigs += contig_summary_yaml[contig]["total_length"] 
+            depth_contigs += contig_summary_yaml[contig]["total_depth"]
+    mapping_qc["summary"]['values_at_floor_of_depth']['x10']["contigs"] = number_contigs
+    mapping_qc["summary"]['values_at_floor_of_depth']['x10']["length"] = length_contigs
+    mapping_qc["summary"]['values_at_floor_of_depth']['x10']["depth"] = float(depth_contigs/length_contigs)
 
 
-def extract_contigs_bin_cov(sampleComponentObj):
-    summary, results, file_path, key = sampleComponentObj.start_data_extraction("contigs.bin.cov")
-    options = sampleComponentObj.get_options()
-    results[key] = datahandling.load_yaml(file_path)
-    for bin_value in options["cov_bin_values"]:
-        summary["raw_length_at_{}x".format(bin_value)] = results[key]["binned_depth"][bin_value - 1]
-    return (summary, results)
+def extract_bbuk_log(denovo_assembly: Category, results: Dict, component_name: str) -> None:
+    file_name = "log/setup__filter_reads_with_bbduk.err.log"
+    file_key = common.json_key_cleaner(file_name)
+    file_path = os.path.join(component_name, file_name)
+    reads_in = common.get_group_from_file("readsIn:\s([0-9]+),", file_path)
+    reads_removed = common.get_group_from_file("readsRemoved:\s([0-9]+),", file_path)
+    denovo_assembly["summary"]["number_of_reads"] = reads_in
+    denovo_assembly["summary"]["number_of_filtered_reads"] = reads_in - reads_removed 
 
 
-def extract_bbuk_log(sampleComponentObj):
-    import json
-    summary, results, file_path, key = sampleComponentObj.start_data_extraction("log/setup__filter_reads_with_bbduk.err.log")
-    buffer = datahandling.read_buffer(file_path)
-    bbduk_dict = json.loads("{" + buffer.partition("{")[2])
-    results[key] = bbduk_dict
-    results[key]["filtered_reads_num"] = results[key]["readsIn"] - results[key]["readsRemoved"]
-    summary["filtered_reads_num"] = results[key]["filtered_reads_num"]
-    return (summary, results)
+def extract_quast_report(denovo_assembly: Category, results: Dict, component_name: str) -> None:
+    file_name = "quast/report.tsv"
+    file_key = common.json_key_cleaner(file_name)
+    file_path = os.path.join(component_name, file_name)
+    results[file_key]["N75"] = int(common.get_group_from_file("N75\t([0-9]+)", file_path))
+    results[file_key]["L50"] = int(common.get_group_from_file("L50\t([0-9]+)", file_path))
+    results[file_key]["L75"] = int(common.get_group_from_file("L75\t([0-9]+)", file_path))
+    denovo_assembly['summary']["GC"] = float(common.get_group_from_file("GC \(%\)\t([0-9]+[\.]?[0-9]*)", file_path))
+    denovo_assembly['summary']["N50"] = int(common.get_group_from_file("N50\t([0-9]+)", file_path))
 
 
-def extract_quast_report(sampleComponentObj):
-    import re
-    summary, results, file_path, key = sampleComponentObj.start_data_extraction("quast/report.tsv")
-    buffer = datahandling.read_buffer(file_path)
-    results[key]["GC"] = float(re.search("GC \(%\)\t([0-9]+[\.]?[0-9]*)", buffer, re.MULTILINE).group(1))
-    results[key]["N50"] = int(re.search("N50\t([0-9]+)", buffer, re.MULTILINE).group(1))
-    results[key]["N75"] = int(re.search("N75\t([0-9]+)", buffer, re.MULTILINE).group(1))
-    results[key]["L50"] = int(re.search("L50\t([0-9]+)", buffer, re.MULTILINE).group(1))
-    results[key]["L75"] = int(re.search("L75\t([0-9]+)", buffer, re.MULTILINE).group(1))
-    summary["GC"] = results[key]["GC"]
-    summary["N50"] = results[key]["N50"]
-    return (summary, results)
+def extract_contig_variants(mapping_qc: Category, results: Dict, component_name: str) -> None:
+    file_name = "contigs.variants"
+    file_key = common.json_key_cleaner(file_name)
+    file_path = os.path.join(component_name, file_name)
+    yaml = common.get_yaml(file_path)
+    mapping_qc["summary"]["snps"]["x10_10%"]['snps'] = yaml["variant_table"][9][9]
+    mapping_qc["summary"]["snps"]["x10_10%"]['indels'] = yaml["indels"]
+    mapping_qc["summary"]["snps"]["x10_10%"]['deletions'] = yaml["deletions"]
 
 
-def extract_contig_variants(sampleComponentObj):
-    summary, results, file_path, key = sampleComponentObj.start_data_extraction("contigs.variants")
-    yaml = datahandling.load_yaml(file_path)
-    results[key] = yaml
-    summary["snp_filter_10x_10%"] = yaml["variant_table"][9][9]
-    summary["snp_filter_indels"] = yaml["indels"]
-    summary["snp_filter_deletions"] = yaml["deletions"]
-    return (summary, results)
+def extract_contig_stats(mapping_qc: Category, results: Dict, component_name: str) -> None:
+    file_name = "contigs.stats"
+    file_key = common.json_key_cleaner(file_name)
+    file_path = os.path.join(component_name, file_name)
 
-
-def extract_contig_stats(sampleComponentObj):
-    import re
-    summary, results, file_path, key = sampleComponentObj.start_data_extraction("contigs.stats")
-    buffer = datahandling.read_buffer(file_path)
-    for line in buffer.split("\n"):
+    with open(file_path, "r") as fh:
+        buffer = fh.readlines()
+    for line in buffer:
         if line.startswith("SN"):
-            results[key][re.sub('[^A-Za-z0-9\s]+', '', line.split("\t")[1]).replace(" ", "_").rstrip("_")] = line.split("\t")[2]
-    summary["raw_total_sequences"] = results[key]["raw_total_sequences"]
-    summary["reads_mapped"] = results[key]["reads_mapped"]
-    summary["reads_unmapped"] = results[key]["reads_unmapped"]
-    summary["insert_size_average"] = results[key]["insert_size_average"]
-    summary["insert_size_standard_deviation"] = results[key]["insert_size_standard_deviation"]
-    return (summary, results)
+            temp = line.replace("SN\t","")
+            key = temp.split(":")[0].strip()
+            value = temp.split(":")[1].split("\t")[0]
+            results[file_key][key] = value
+
+    mapping_qc["summary"]["mapped"]["reads_mapped"] = results[file_key]["reads_mapped"]
+    mapping_qc["summary"]["mapped"]["reads_unmapped"] = results[file_key]["reads_unmapped"]
+    mapping_qc["summary"]["mapped"]["insert_size_average"] = results[file_key]["insert_size_average"]
+    mapping_qc["summary"]["mapped"]["insert_size_standard_deviation"] = results[file_key]["insert_size_standard_deviation"]
 
 
-def datadump(sampleComponentObj, log):
-    sampleComponentObj.start_data_dump(log=log)
-    sampleComponentObj.run_data_dump_on_function(extract_contigs_sum_cov, log=log)
-    sampleComponentObj.run_data_dump_on_function(extract_contigs_bin_cov, log=log)
-    sampleComponentObj.run_data_dump_on_function(extract_bbuk_log, log=log)
-    sampleComponentObj.run_data_dump_on_function(extract_quast_report, log=log)
-    sampleComponentObj.run_data_dump_on_function(extract_contig_variants, log=log)
-    sampleComponentObj.run_data_dump_on_function(extract_contig_stats, log=log)
-    sampleComponentObj.end_data_dump(log=log)
+def datadump(samplecomponent_ref_json: Dict):
+    samplecomponent_ref = SampleComponentReference(value=samplecomponent_ref_json)
+    samplecomponent = SampleComponent.load(samplecomponent_ref)
+    sample = Sample.load(samplecomponent.sample)
+    component = Component.load(samplecomponent.component)
+    denovo_assembly = samplecomponent.get_category("denovo_assembly")
+    if denovo_assembly is None:
+        denovo_assembly = Category(value={
+            "name": "denovo_assembly",
+            "component": {"id": samplecomponent["component"]["_id"], "name": samplecomponent["component"]["name"]},
+            "summary": {},
+            "report": {}
+        }
+        )
+    mapping_qc = samplecomponent.get_category("mapping_qc")
+    if mapping_qc is None:
+        mapping_qc = Category(value={
+            "name": "mapping_qc",
+            "component": {"id": samplecomponent["component"]["_id"], "name": samplecomponent["component"]["name"]},
+            "summary": {},
+            "report": {}
+        }
+        )
+    extract_contigs_sum_cov(denovo_assembly, mapping_qc, samplecomponent["results"], samplecomponent["component"]["name"])
+    extract_bbuk_log(denovo_assembly, samplecomponent["results"], samplecomponent["component"]["name"])
+    extract_quast_report(denovo_assembly, samplecomponent["results"], samplecomponent["component"]["name"])
+    extract_contig_variants(mapping_qc, samplecomponent["results"], samplecomponent["component"]["name"])
+    extract_contig_stats(mapping_qc, samplecomponent["results"], samplecomponent["component"]["name"])
+    samplecomponent.set_category(denovo_assembly)
+    samplecomponent.set_category(mapping_qc)
+    samplecomponent["status"] = "Success"
+    samplecomponent.save()
+    sample.set_category(denovo_assembly)
+    sample.set_category(mapping_qc)
+    sample.save()
+    with open(os.path.join(samplecomponent["component"]["name"], "datadump_complete"), "w+") as fh:
+        fh.write("done")
 
 
 datadump(
-    snakemake.params.sampleComponentObj,
-    snakemake.log)
+    snakemake.params.samplecomponent_ref_json,
+)

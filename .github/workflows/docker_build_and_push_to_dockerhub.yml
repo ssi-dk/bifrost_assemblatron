@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - master
-      - dev
+      - test
 jobs:
   build-n-publish:
     name: Publish Docker 🐳 image 📦 to Dockerhub and create 🏷 for repo
@@ -25,8 +25,8 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }} # optional
         password: ${{ secrets.DOCKER_PASSWORD }} # optional
         repository: ssidk/${{ env.REPOSITORY_NAME }}
-        tags: dev
-        build_args: BUILD_ENV=dev,CODE_VERSION=dev,RESOURCE_VERSION=${{ env.RESOURCE_VERSION }}
+        tags: test
+        build_args: BUILD_ENV=test,CODE_VERSION=${{ env.CODE_VERSION }},RESOURCE_VERSION=${{ env.RESOURCE_VERSION }}
     - name: Build and push Docker images (to latest)
       id: buildmaster
       if: github.ref == 'refs/heads/master'

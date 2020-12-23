@@ -2,16 +2,16 @@
 #-Basic info----------------------------------------------------------------------------------------
 display_name: assemblatron
 #name is compound of display_name, code version, resource version
-name: &name assemblatron__2.1.1__NA
+name: assemblatron__v2_2_1__NA
 version:
-  schema: 2.0
-  code: 2.1.1
+  schema: ["v2_1_0"]
+  code: v2_2_1
   resource: NA
 #---------------------------------------------------------------------------------------------------
 
 #-Details-------------------------------------------------------------------------------------------
 details:
-  target: sample
+  target: [sample]
   description: >
     This does de-novo assembly on a sample and then maps the reads back against the denovo assembly
     for variant calling. In the process it gathers metrics on many aspects for the use of QC. This
@@ -20,7 +20,7 @@ details:
 #---------------------------------------------------------------------------------------------------
 
 #-Category info-------------------------------------------------------------------------------------
-category: [denovo_assembly]
+category: [denovo_assembly, mapping_qc]
 #---------------------------------------------------------------------------------------------------
 
 #-Install-------------------------------------------------------------------------------------------
@@ -31,7 +31,7 @@ install:
 
 #-Options-------------------------------------------------------------------------------------------
 options:
-  cov_bin_values: [1, 10, 25]
+# NA
 #---------------------------------------------------------------------------------------------------
 
 #-Required resource files---------------------------------------------------------------------------
@@ -42,7 +42,7 @@ resources:
 #-Requirements to run component---------------------------------------------------------------------
 requirements:
   sample:
-    properties:
+    categories:
       paired_reads:
         summary:
           data:

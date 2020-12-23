@@ -1,48 +1,22 @@
-# This is intended to run in Github Actions
-# Arg can be set to dev for testing purposes
+# This is intended to run in Local Development (dev) and Github Actions (test/prod)
+# BUILD_ENV options (dev, test, prod) dev for local testing and test for github actions testing on prod ready code
 ARG BUILD_ENV="prod"
-ARG MAINTAINER="kimn@ssi.dk"
-ARG NAME="bifrost_assemblatron"
+ARG MAINTAINER="kimn@ssi.dk;"
+ARG BIFROST_COMPONENT_NAME="bifrost_assemblatron"
+ARG FORCE_DOWNLOAD=true
 
-# For dev build include testing modules via pytest done on github and in development.
-# Watchdog is included for docker development (intended method) and should preform auto testing 
-# while working on *.py files
-#
-# Test data is in bifrost_run_launcher:dev
-#- Source code (development):start------------------------------------------------------------------
-FROM ssidk/bifrost_run_launcher:dev as build_dev
-ONBUILD ARG NAME
-ONBUILD COPY . /${NAME}
-ONBUILD WORKDIR /${NAME}
-ONBUILD RUN \
-    pip install yq; \
-    yq -Y -i '.version.code |= "dev"' ${NAME}/config.yaml; \
-    pip install -r requirements.dev.txt;
-#- Source code (development):end--------------------------------------------------------------------
 
-#- Source code (productopm):start-------------------------------------------------------------------
-FROM continuumio/miniconda3:4.7.10 as build_prod
-ONBUILD ARG NAME
-ONBUILD WORKDIR ${NAME}
-ONBUILD COPY ${NAME} ${NAME}
-ONBUILD COPY resources resources
-ONBUILD COPY setup.py setup.py
-ONBUILD COPY requirements.txt requirements.txt
-ONBUILD RUN \
-    pip install -r requirements.txt
-#- Source code (productopm):end---------------------------------------------------------------------
-
-#- Use development or production to and add info: start---------------------------------------------
-FROM build_${BUILD_ENV}
-ARG NAME
+#---------------------------------------------------------------------------------------------------
+# Programs for all environments
+#---------------------------------------------------------------------------------------------------
+FROM continuumio/miniconda3:4.8.2 as build_base
+ARG BIFROST_COMPONENT_NAME
+ARG FORCE_DOWNLOAD
 LABEL \
-    name=${NAME} \
-    description="Docker environment for ${NAME}" \
+    BIFROST_COMPONENT_NAME=${BIFROST_COMPONENT_NAME} \
+    description="Docker environment for ${BIFROST_COMPONENT_NAME}" \
     environment="${BUILD_ENV}" \
     maintainer="${MAINTAINER}"
-#- Use development or production to and add info: end---------------------------------------------
-
-#- Tools to install:start---------------------------------------------------------------------------
 RUN \
     conda install -yq -c conda-forge -c bioconda -c default snakemake-minimal==5.7.1; \
     conda install -yq -c conda-forge -c bioconda -c defaults bbmap==38.58; \
@@ -53,16 +27,56 @@ RUN \
     # Note prokka has a 1 year deadline due to tbl2asn. 1.14.6 was made available Feb 20th
     conda install -yq -c conda-forge -c bioconda -c defaults prokka==1.14.6; \
     # Don't use conda for Quast they cap the python version which causes issues with install
-    pip install -q quast==5.0.2; \
-    pip list;
-#- Tools to install:end ----------------------------------------------------------------------------
+    pip install -q quast==5.0.2;
 
-#- Additional resources (files/DBs): start ---------------------------------------------------------
-# adapters.fasta included with src
-#- Additional resources (files/DBs): end -----------------------------------------------------------
+
+#---------------------------------------------------------------------------------------------------
+# Base for dev environement
+#---------------------------------------------------------------------------------------------------
+FROM continuumio/miniconda3:4.8.2 as build_dev
+ARG BIFROST_COMPONENT_NAME
+COPY --from=build_base / /
+COPY /components/${BIFROST_COMPONENT_NAME} /bifrost/components/${BIFROST_COMPONENT_NAME}
+COPY /lib/bifrostlib /bifrost/lib/bifrostlib
+WORKDIR /bifrost/components/${BIFROST_COMPONENT_NAME}/
+RUN \
+    pip install -r requirements.txt; \
+    pip install --no-cache -e file:///bifrost/lib/bifrostlib; \
+    pip install --no-cache -e file:///bifrost/components/${BIFROST_COMPONENT_NAME}/
+
+#---------------------------------------------------------------------------------------------------
+# Base for production environment
+#---------------------------------------------------------------------------------------------------
+FROM continuumio/miniconda3:4.8.2 as build_prod
+ARG BIFROST_COMPONENT_NAME
+COPY --from=build_base / /
+WORKDIR /bifrost/components/${BIFROST_COMPONENT_NAME}
+COPY ./ ./
+RUN \
+    pip install file:///bifrost/components/${BIFROST_COMPONENT_NAME}/
+
+#---------------------------------------------------------------------------------------------------
+# Base for test environment (prod with tests)
+#---------------------------------------------------------------------------------------------------
+FROM continuumio/miniconda3:4.8.2 as build_test
+ARG BIFROST_COMPONENT_NAME
+COPY --from=build_base / /
+WORKDIR /bifrost/components/${BIFROST_COMPONENT_NAME}
+COPY ./ ./
+RUN \
+    pip install -r requirements.txt \
+    pip install file:///bifrost/components/${BIFROST_COMPONENT_NAME}/
+
+
+#---------------------------------------------------------------------------------------------------
+# Additional resources
+#---------------------------------------------------------------------------------------------------
+FROM build_${BUILD_ENV}
+# NA
+
 
 #- Set up entry point:start ------------------------------------------------------------------------
-ONBUILD WORKDIR ${NAME}
+WORKDIR /bifrost/components/${BIFROST_COMPONENT_NAME}
 ENTRYPOINT ["python3", "-m", "bifrost_assemblatron"]
 CMD ["python3", "-m", "bifrost_assemblatron", "--help"]
 #- Set up entry point:end --------------------------------------------------------------------------
