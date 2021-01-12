@@ -82,6 +82,6 @@ class TestBifrostMinReadCheck:
             "--outdir", self.test_dir
         ]
         launcher.main(args=test_args)
-        assert os.path.isfile(f"{self.test_dir}/assemblatron__v2_2_1__NA/datadump_complete")
+        assert os.path.isfile(f"{self.test_dir}/assemblatron__v2_2_1/datadump_complete")
         shutil.rmtree(self.test_dir)
-        assert not os.path.isdir(f"{self.test_dir}/assemblatron__v2_2_1__NA")
+        assert not os.path.isdir(f"{self.test_dir}/assemblatron__v2_2_1")

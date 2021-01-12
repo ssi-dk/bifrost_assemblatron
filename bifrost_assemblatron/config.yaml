@@ -2,11 +2,10 @@
 #-Basic info----------------------------------------------------------------------------------------
 display_name: assemblatron
 #name is compound of display_name, code version, resource version
-name: assemblatron__v2_2_1__NA
+name: assemblatron__v2_2_1
 version:
   schema: ["v2_1_0"]
   code: v2_2_1
-  resource: NA
 #---------------------------------------------------------------------------------------------------
 
 #-Details-------------------------------------------------------------------------------------------
@@ -20,7 +19,7 @@ details:
 #---------------------------------------------------------------------------------------------------
 
 #-Category info-------------------------------------------------------------------------------------
-category: [denovo_assembly, mapping_qc]
+category: [denovo_assembly, mapping_qc, contigs]
 #---------------------------------------------------------------------------------------------------
 
 #-Install-------------------------------------------------------------------------------------------
@@ -52,8 +51,6 @@ requirements:
 db_values_changes:
   files:
     - assemblatron/contigs.fasta
-    - assemblatron/contigs.bin.cov
-    - assemblatron/contigs.gff
     - assemblatron/contigs.pileup
     - assemblatron/contigs.sketch
     - assemblatron/contigs.stats
