@@ -36,7 +36,7 @@ ONBUILD COPY --from=build_base / /
 ONBUILD COPY /components/${BIFROST_COMPONENT_NAME} /bifrost/components/${BIFROST_COMPONENT_NAME}
 ONBUILD COPY /lib/bifrostlib /bifrost/lib/bifrostlib
 ONBUILD WORKDIR /bifrost/components/${BIFROST_COMPONENT_NAME}/
-RUN \
+ONBUILD RUN \
     pip install -r requirements.txt; \
     pip install --no-cache -e file:///bifrost/lib/bifrostlib; \
     pip install --no-cache -e file:///bifrost/components/${BIFROST_COMPONENT_NAME}/
@@ -49,7 +49,7 @@ ONBUILD ARG BIFROST_COMPONENT_NAME
 ONBUILD COPY --from=build_base / /
 ONBUILD WORKDIR /bifrost/components/${BIFROST_COMPONENT_NAME}
 ONBUILD COPY ./ ./
-RUN \
+ONBUILD RUN \
     pip install file:///bifrost/components/${BIFROST_COMPONENT_NAME}/
 
 #---------------------------------------------------------------------------------------------------
@@ -60,7 +60,7 @@ ONBUILD ARG BIFROST_COMPONENT_NAME
 ONBUILD COPY --from=build_base / /
 ONBUILD WORKDIR /bifrost/components/${BIFROST_COMPONENT_NAME}
 ONBUILD COPY ./ ./
-RUN \
+ONBUILD RUN \
     pip install -r requirements.txt \
     pip install file:///bifrost/components/${BIFROST_COMPONENT_NAME}/
 
