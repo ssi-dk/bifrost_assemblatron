@@ -3,6 +3,7 @@ import os
 import sys
 import traceback
 
+from bifrostlib import common
 from bifrostlib.datahandling import SampleReference
 from bifrostlib.datahandling import Sample
 from bifrostlib.datahandling import ComponentReference
@@ -12,7 +13,6 @@ from bifrostlib.datahandling import SampleComponent
 os.umask(0o2)
 
 try:
-    #TODO: fix this, it looks like sample isnt being made properly
     sample_ref = SampleReference(_id=config.get('sample_id', None), name=config.get('sample_name', None))
     sample:Sample = Sample.load(sample_ref) # schema 2.1
     if sample is None:
@@ -25,26 +25,23 @@ try:
     samplecomponent = SampleComponent.load(samplecomponent_ref)
     if samplecomponent is None:
         samplecomponent:SampleComponent = SampleComponent(sample_reference=sample.to_reference(), component_reference=component.to_reference()) # schema 2.1
-    samplecomponent['status'] = "Running"
-    samplecomponent.save()
+    common.set_status_and_save(sample, samplecomponent, "Running")
 except Exception as error:
     print(traceback.format_exc(), file=sys.stderr)
     raise Exception("failed to set sample, component and/or samplecomponent")
 
 onerror:
     if not samplecomponent.has_requirements():
-        samplecomponent['status'] = "Requirements not met"
+        common.set_status_and_save(sample, samplecomponent, "Requirements not met")
     if samplecomponent['status'] == "Running":
-        samplecomponent['status'] = "Failure"
-        samplecomponent.save()
+        common.set_status_and_save(sample, samplecomponent, "Failure")
 
 rule all:
     input:
         # file is defined by datadump function
         f"{component['name']}/datadump_complete"
     run:
-        samplecomponent["status"] = "Success"
-        samplecomponent.save()
+        common.set_status_and_save(sample, samplecomponent, "Success")
 
 rule setup:
     output:
@@ -72,10 +69,7 @@ rule check_requirements:
     params:
         samplecomponent
     run:
-        if not samplecomponent.has_requirements():
-            samplecomponent['status'] = "Requirements not met"
-            samplecomponent.save()
-        else:
+        if samplecomponent.has_requirements():
             with open(output.check_file, "w") as fh:
                 fh.write("")
 
