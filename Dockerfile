@@ -18,7 +18,7 @@ LABEL \
     maintainer="${MAINTAINER}"
 RUN \
     conda install -yq -c conda-forge -c bioconda -c default snakemake-minimal==5.31.1; \
-    conda install -yq -c conda-forge -c bioconda -c default bbmap==38.87; \
+    conda install -yq -c conda-forge -c bioconda -c default bbmap==38.58; \
     conda install -yq -c conda-forge -c bioconda -c default skesa==2.4.0; \
     conda install -yq -c conda-forge -c bioconda -c default minimap2==2.17; \
     conda install -yq -c conda-forge -c bioconda -c default samtools==1.11; \
