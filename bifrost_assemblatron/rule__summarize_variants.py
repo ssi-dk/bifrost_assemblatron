@@ -1,18 +1,13 @@
 # script for use with snakemake
-import sys
-import subprocess
 import traceback
-from bifrostlib import datahandling
+from typing import Dict
+from bifrostlib import common
 
-
-def rule__summarize_variants(input, output, sampleComponentObj, log):
+def rule__summarize_variants(input: object, output: object, component_json: Dict, log: object) -> None:
     import cyvcf2
     try:
-        this_function_name = sys._getframe().f_code.co_name
-        name, options, resources = sampleComponentObj.start_rule(this_function_name, log=log)
-
         variants_vcf_file = str(input.variants)
-        summarize_ambiguous_snp_yaml = str(output.variants_yaml)
+        summarize_ambiguous_snp_yaml = str(output._file)
         """
         Logic here is that you record a next_variant then compare it to the next one first. This is
         done because in the next_variant caller used (BBMap) multiple variants for the same position
@@ -64,20 +59,20 @@ def rule__summarize_variants(input, output, sampleComponentObj, log):
                     result_matrix["deletions"] += 1
                 current_variant = next_variant
                 current_frequency = next_frequency
-            # should handle last entry
-            if not next_variant.is_indel and not next_variant.is_deletion:
-                depth = next_variant.INFO.get("DP")
-                frequency = current_frequency
-                if depth > 100:
-                    depth = 100
-                if round(frequency, 2) > 0.5:
-                    frequency = 1.00 - frequency
-                frequency = int(round(frequency, 2) * 100)
-                data_matrix[depth][frequency] += 1
-            elif next_variant.is_indel:
-                result_matrix["indels"] += 1
-            elif next_variant.is_deletion:
-                result_matrix["deletions"] += 1
+                # should handle last entry
+                if not next_variant.is_indel and not next_variant.is_deletion:
+                    depth = next_variant.INFO.get("DP")
+                    frequency = current_frequency
+                    if depth > 100:
+                        depth = 100
+                    if round(frequency, 2) > 0.5:
+                        frequency = 1.00 - frequency
+                    frequency = int(round(frequency, 2) * 100)
+                    data_matrix[depth][frequency] += 1
+                elif next_variant.is_indel:
+                    result_matrix["indels"] += 1
+                elif next_variant.is_deletion:
+                    result_matrix["deletions"] += 1
         except StopIteration:
             result_matrix["error"] = "No variants"
 
@@ -93,12 +88,10 @@ def rule__summarize_variants(input, output, sampleComponentObj, log):
                 column_add[j] = variant_table[i - 1][j]
 
         result_matrix["variant_table"] = variant_table
-        datahandling.save_yaml(result_matrix, summarize_ambiguous_snp_yaml)
-
-        sampleComponentObj.end_rule(this_function_name, log=log)
+        common.save_yaml(result_matrix, summarize_ambiguous_snp_yaml)
     except Exception:
-        sampleComponentObj.write_log_err(log, str(traceback.format_exc()))
-
+        with open(log.err_file, "w+") as fh:
+            fh.write(traceback.format_exc())
 
 
 rule__summarize_variants(

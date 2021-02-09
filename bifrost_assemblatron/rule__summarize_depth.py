@@ -1,25 +1,16 @@
 # script for use with snakemake
-import sys
 import traceback
-import os
-from bifrostlib import datahandling
+from typing import Dict
+from bifrostlib import common
 
-
-def rule__summarize_depth(input, output, sampleComponentObj, log):
+def rule__summarize_depth(input: object, output: object, component_json: Dict, log: object) -> None:
     try:
-        this_function_name = sys._getframe().f_code.co_name
-        name, options, resources = sampleComponentObj.start_rule(this_function_name, log=log)
-
         # Variables being used
-        depth_file = str(input.coverage)
-        summarize_contig_depth_yaml = str(output.contig_depth_yaml)
-        summarize_binned_depth_yaml = str(output.binned_depth_yaml)
-
         """
         Break this into 2?
         """
         depth_dict = {}
-        with open(depth_file, "r") as input_file:
+        with open(input.coverage, "r") as input_file:
             for line in input_file:
                 if line[0] != "#":
                     contig = line.split("\t")[0]
@@ -60,17 +51,15 @@ def rule__summarize_depth(input, output, sampleComponentObj, log):
                     if depth >= i:
                         binned_depth[i - 1] += depth_dict[contig][depth]
 
-        datahandling.save_yaml({"contig_depth": contig_depth_summary_dict}, summarize_contig_depth_yaml)
-        datahandling.save_yaml({"binned_depth": binned_depth}, summarize_binned_depth_yaml)
-
-        sampleComponentObj.end_rule(this_function_name, log=log)
+        common.save_yaml({"contig_depth": contig_depth_summary_dict}, output._file)
+        common.save_yaml({"binned_depth": binned_depth}, output._file2)
     except Exception:
-        sampleComponentObj.write_log_err(log, str(traceback.format_exc()))
+        with open(log.err_file, "w+") as fh:
+            fh.write(traceback.format_exc())
 
 
-
-rule__summarize_depth(
+rule__greater_than_min_reads_check(
     snakemake.input,
     snakemake.output,
-    snakemake.params.sampleComponentObj,
+    snakemake.params.component_json,
     snakemake.log)

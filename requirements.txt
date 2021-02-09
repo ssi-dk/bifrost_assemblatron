@@ -1,2 +1,7 @@
-bifrostlib==2.0.11
-/bifrost_assemblatron/
+pytest
+pytest-cov
+pytest-profiling
+coverage
+pyyaml
+argh
+watchdog
