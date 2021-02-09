@@ -93,7 +93,7 @@ rule setup__filter_reads_with_bbduk:
     params:
         adapters = component["resources"]["adapters_fasta"]
     shell:
-        "bbduk.sh in={input.reads[0]} in2={input.reads[1]} out={output.filtered_reads} ref={params.adapters} ktrim=r k=23 mink=11 hdist=1 tbo qtrim=r minlength=30 json=t 1> {log.out_file} 2> {log.err_file}"
+        "java -ea -cp /opt/conda/opt/bbmap-38.58-0/current/ jgi.BBDuk in={input.reads[0]} in2={input.reads[1]} out={output.filtered_reads} ref={params.adapters} ktrim=r k=23 mink=11 hdist=1 tbo qtrim=r minlength=30 json=t 1> {log.out_file} 2> {log.err_file}"
 
 
 rule_name = "assembly__skesa"
@@ -249,7 +249,7 @@ rule summarize__depth:
     params:
         component_json = component.json
     output:
-        _file = f"{component['name']}/contigs.sum.cov"
+        _file = f"{component['name']}/contigs.sum.cov",
         _file2= f"{component['name']}/contigs.bin.cov"
     script:
         os.path.join(os.path.dirname(workflow.snakefile), "rule__summarize_depth.py")
@@ -310,7 +310,7 @@ rule rename_contigs:
     input:
         contigs = rules.assembly__skesa.output,
     output:
-        contigs = f"{component['name']}/{sample['display_name']}.fasta",
+        contigs = f"{component['name']}/{sample['display_name']}.fasta"
     params:
         sample_name = sample['display_name']
     shell:
@@ -324,10 +324,10 @@ rule datadump:
     message:
         f"Running step:{rule_name}"
     log:
-        out_file = component_name + "/log/" + rule_name + ".out.log",
-        err_file = component_name + "/log/" + rule_name + ".err.log",
+        out_file = f"{component['name']}/log/{rule_name}.out.log",
+        err_file = f"{component['name']}/log/{rule_name}.err.log",
     benchmark:
-        component_name + "/benchmarks/" + rule_name + ".benchmark"
+        f"{component['name']}/benchmarks/{rule_name}.benchmark"
     input:
         #* Dynamic section: start ******************************************************************
         rules.rename_contigs.output.contigs,  # Needs to be output of final rule

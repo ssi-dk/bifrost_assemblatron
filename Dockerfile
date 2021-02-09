@@ -18,11 +18,11 @@ LABEL \
     maintainer="${MAINTAINER}"
 RUN \
     conda install -yq -c conda-forge -c bioconda -c default snakemake-minimal==5.31.1; \
-    conda install -yq -c conda-forge -c bioconda -c defaults bbmap==38.87; \
-    conda install -yq -c conda-forge -c bioconda -c defaults skesa==2.4.0; \
-    conda install -yq -c conda-forge -c bioconda -c defaults minimap2==2.17; \
-    conda install -yq -c conda-forge -c bioconda -c defaults samtools==1.11; \
-    conda install -yq -c conda-forge -c bioconda -c defaults cyvcf2==0.30.1; \
+    conda install -yq -c conda-forge -c bioconda -c default bbmap==38.87; \
+    conda install -yq -c conda-forge -c bioconda -c default skesa==2.4.0; \
+    conda install -yq -c conda-forge -c bioconda -c default minimap2==2.17; \
+    conda install -yq -c conda-forge -c bioconda -c default samtools==1.11; \
+    conda install -yq -c conda-forge -c bioconda -c default cyvcf2==0.30.1; \
     # Don't use conda for Quast they cap the python version which causes issues with install
     pip install -q quast==5.0.2;
 
