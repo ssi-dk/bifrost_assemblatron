@@ -33,7 +33,7 @@ def extract_contigs_sum_cov(denovo_assembly: Category, mapping_qc: Category, res
     length_contigs = 0
     depth_contigs = 0
     for contig in contig_summary_yaml:
-        if contig_summary_yaml["coverage"] >= float(10):
+        if contig_summary_yaml[contig]["coverage"] >= float(10):
             number_contigs += 1
             length_contigs += contig_summary_yaml[contig]["total_length"] 
             depth_contigs += contig_summary_yaml[contig]["total_depth"]
