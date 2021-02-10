@@ -9,7 +9,7 @@ setup(
     author_email="kimn@ssi.dk",
     packages=find_packages(),
     install_requires=[
-        'bifrostlib >= 2.1.2',
+        'bifrostlib >= 2.1.5',
         'cyvcf2 >= 0.30.1'
     ],
     package_data={"bifrost_assemblatron": ['config.yaml', 'pipeline.smk']},

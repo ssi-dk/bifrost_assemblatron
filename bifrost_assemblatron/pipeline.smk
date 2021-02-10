@@ -332,8 +332,7 @@ rule datadump:
         #* Dynamic section: start ******************************************************************
         rules.rename_contigs.output.contigs,  # Needs to be output of final rule
         rules.summarize__variants.output._file,
-        rules.summarize__depth.output._file,
-        rules.summarize__depth.output._file2
+        rules.summarize__depth.output._file
         #* Dynamic section: end ********************************************************************
     output:
         complete = rules.all.input
