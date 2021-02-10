@@ -37,9 +37,14 @@ def extract_contigs_sum_cov(denovo_assembly: Category, mapping_qc: Category, res
             number_contigs += 1
             length_contigs += contig_summary_yaml[contig]["total_length"] 
             depth_contigs += contig_summary_yaml[contig]["total_depth"]
-    mapping_qc["summary"]['values_at_floor_of_depth']['x10']["contigs"] = number_contigs
-    mapping_qc["summary"]['values_at_floor_of_depth']['x10']["length"] = length_contigs
-    mapping_qc["summary"]['values_at_floor_of_depth']['x10']["depth"] = float(depth_contigs/length_contigs)
+    values_at_floor_of_depth = {
+        'x10': {
+            'contigs': number_contigs,
+            'length': length_contigs,
+            'depth': float(depth_contigs/length_contigs)
+        }
+    }
+    mapping_qc["summary"]['values_at_floor_of_depth'] = values_at_floor_of_depth
 
 
 def extract_bbuk_log(denovo_assembly: Category, results: Dict, component_name: str) -> None:
@@ -68,9 +73,15 @@ def extract_contig_variants(mapping_qc: Category, results: Dict, component_name:
     file_key = common.json_key_cleaner(file_name)
     file_path = os.path.join(component_name, file_name)
     yaml = common.get_yaml(file_path)
-    mapping_qc["summary"]["snps"]["x10_10%"]['snps'] = yaml["variant_table"][9][9]
-    mapping_qc["summary"]["snps"]["x10_10%"]['indels'] = yaml["indels"]
-    mapping_qc["summary"]["snps"]["x10_10%"]['deletions'] = yaml["deletions"]
+    snps = {
+        'x10_10%':
+            {
+                'snps': yaml["variant_table"][9][9],
+                'indels': yaml["indels"],
+                'deletions': yaml["deletions"]
+            }
+    }
+    mapping_qc["summary"]["snps"] = snps
 
 
 def extract_contig_stats(mapping_qc: Category, results: Dict, component_name: str) -> None:
@@ -86,11 +97,13 @@ def extract_contig_stats(mapping_qc: Category, results: Dict, component_name: st
             key = temp.split(":")[0].strip()
             value = temp.split(":")[1].split("\t")[0]
             results[file_key][key] = value
-
-    mapping_qc["summary"]["mapped"]["reads_mapped"] = results[file_key]["reads_mapped"]
-    mapping_qc["summary"]["mapped"]["reads_unmapped"] = results[file_key]["reads_unmapped"]
-    mapping_qc["summary"]["mapped"]["insert_size_average"] = results[file_key]["insert_size_average"]
-    mapping_qc["summary"]["mapped"]["insert_size_standard_deviation"] = results[file_key]["insert_size_standard_deviation"]
+    mapped = {
+        'reads_mapped': results[file_key]["reads_mapped"], 
+        'reads_unmapped': results[file_key]["reads_unmapped"], 
+        'insert_size_average': results[file_key]["insert_size_average"],
+        'insert_size_standard_deviation': results[file_key]["insert_size_standard_deviation"]
+    }
+    mapping_qc["summary"]["mapped"] = mapped
 
 
 def save_contigs_locations(contigs: Category, results: Dict, component_name: str) -> None:
