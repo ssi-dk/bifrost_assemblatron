@@ -97,5 +97,5 @@ def rule__summarize_variants(input: object, output: object, component_json: Dict
 rule__summarize_variants(
     snakemake.input,
     snakemake.output,
-    snakemake.params.sampleComponentObj,
+    snakemake.params.component_json,
     snakemake.log)

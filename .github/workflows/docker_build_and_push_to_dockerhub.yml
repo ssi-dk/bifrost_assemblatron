@@ -26,7 +26,7 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }} # optional
         repository: ssidk/${{ env.REPOSITORY_NAME }}
         tags: test
-        build_args: BUILD_ENV=test,CODE_VERSION=${{ env.CODE_VERSION }},RESOURCE_VERSION=${{ env.RESOURCE_VERSION }}
+        build_args: BUILD_ENV=test,CODE_VERSION=${{ env.CODE_VERSION }}
     - name: Build and push Docker images (to latest)
       id: buildmaster
       if: github.ref == 'refs/heads/master'
@@ -35,11 +35,11 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }} # optional
         password: ${{ secrets.DOCKER_PASSWORD }} # optional
         repository: ssidk/${{ env.REPOSITORY_NAME }}
-        tags: latest,${{ env.CODE_VERSION }}__${{ env.RESOURCE_VERSION }}
-        build_args: CODE_VERSION=${{ env.CODE_VERSION }},RESOURCE_VERSION=${{ env.RESOURCE_VERSION }}
+        tags: latest,${{ env.CODE_VERSION }}
+        build_args: CODE_VERSION=${{ env.CODE_VERSION }}
     - name: Tag commit
       uses: tvdias/github-tagger@v0.0.1
       if: github.ref == 'refs/heads/master'
       with:
         repo-token: "${{ secrets.GITHUB_TOKEN }}"
-        tag: ${{ env.CODE_VERSION }}__${{ env.RESOURCE_VERSION }}
+        tag: ${{ env.CODE_VERSION }}
