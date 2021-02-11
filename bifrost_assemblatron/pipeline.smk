@@ -332,6 +332,7 @@ rule datadump:
         #* Dynamic section: start ******************************************************************
         rules.rename_contigs.output.contigs,  # Needs to be output of final rule
         rules.assembly_check__quast_on_contigs.output.quast,
+        rules.post_assembly__samtools_stats.output.stats,
         rules.summarize__variants.output._file,
         rules.summarize__depth.output._file
         #* Dynamic section: end ********************************************************************
