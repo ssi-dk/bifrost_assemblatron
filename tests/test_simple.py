@@ -22,7 +22,7 @@ def test_connection():
 
 
 class TestBifrostAssemblatron:
-    component_name = "assemblatron__v2_2_9"
+    component_name = "assemblatron__v2_2_10"
     current_dir = os.getcwd()
     test_dir = "/bifrost/test_data/output/test__assemblatron/"
     json_entries = [
