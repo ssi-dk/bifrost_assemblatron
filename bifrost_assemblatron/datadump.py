@@ -37,14 +37,13 @@ def extract_contigs_sum_cov(denovo_assembly: Category, mapping_qc: Category, res
             number_contigs += 1
             length_contigs += contig_summary_yaml[contig]["total_length"] 
             depth_contigs += contig_summary_yaml[contig]["total_depth"]
-    values_at_floor_of_depth = {
+    mapping_qc["summary"]['values_at_floor_of_depth'] = {
         'x10': {
             'contigs': number_contigs,
             'length': length_contigs,
             'depth': float(depth_contigs/length_contigs)
         }
     }
-    mapping_qc["summary"]['values_at_floor_of_depth'] = values_at_floor_of_depth
 
 
 def extract_bbuk_log(denovo_assembly: Category, results: Dict, component_name: str) -> None:
@@ -63,9 +62,11 @@ def extract_quast_report(denovo_assembly: Category, results: Dict, component_nam
     file_name = "quast/report.tsv"
     file_key = common.json_key_cleaner(file_name)
     file_path = os.path.join(component_name, file_name)
-    results[file_key]["N75"] = int(common.get_group_from_file("N75\t([0-9]+)", file_path))
-    results[file_key]["L50"] = int(common.get_group_from_file("L50\t([0-9]+)", file_path))
-    results[file_key]["L75"] = int(common.get_group_from_file("L75\t([0-9]+)", file_path))
+    results[file_key] = {
+        "N75": int(common.get_group_from_file("N75\t([0-9]+)", file_path)),
+        "L50": int(common.get_group_from_file("L50\t([0-9]+)", file_path)),
+        "L75": int(common.get_group_from_file("L75\t([0-9]+)", file_path))
+    }
     denovo_assembly['summary']["GC"] = float(common.get_group_from_file("GC \(%\)\t([0-9]+[\.]?[0-9]*)", file_path))
     denovo_assembly['summary']["N50"] = int(common.get_group_from_file("N50\t([0-9]+)", file_path))
 
@@ -75,7 +76,7 @@ def extract_contig_variants(mapping_qc: Category, results: Dict, component_name:
     file_key = common.json_key_cleaner(file_name)
     file_path = os.path.join(component_name, file_name)
     yaml = common.get_yaml(file_path)
-    snps = {
+    mapping_qc["summary"]["snps"] = {
         'x10_10%':
             {
                 'snps': yaml["variant_table"][9][9],
@@ -83,7 +84,6 @@ def extract_contig_variants(mapping_qc: Category, results: Dict, component_name:
                 'deletions': yaml["deletions"]
             }
     }
-    mapping_qc["summary"]["snps"] = snps
 
 
 def extract_contig_stats(mapping_qc: Category, results: Dict, component_name: str) -> None:
@@ -99,13 +99,12 @@ def extract_contig_stats(mapping_qc: Category, results: Dict, component_name: st
             key = temp.split(":")[0].strip()
             value = temp.split(":")[1].split("\t")[0]
             results[file_key][key] = value
-    mapped = {
+    mapping_qc["summary"]["mapped"] = {
         'reads_mapped': results[file_key]["reads_mapped"], 
         'reads_unmapped': results[file_key]["reads_unmapped"], 
         'insert_size_average': results[file_key]["insert_size_average"],
         'insert_size_standard_deviation': results[file_key]["insert_size_standard_deviation"]
     }
-    mapping_qc["summary"]["mapped"] = mapped
 
 
 def save_contigs_locations(contigs: Category, results: Dict, component_name: str) -> None:
