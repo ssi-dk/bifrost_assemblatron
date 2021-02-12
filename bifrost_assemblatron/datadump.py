@@ -97,13 +97,14 @@ def extract_contig_stats(mapping_qc: Category, results: Dict, component_name: st
         if line.startswith("SN"):
             temp = line.replace("SN\t","")
             key = temp.split(":")[0].strip()
+            key = key.replace(" ","_")
             value = temp.split(":")[1].split("\t")[0]
             results[file_key][key] = value
     mapping_qc["summary"]["mapped"] = {
-        'reads_mapped': results[file_key]["reads_mapped"], 
-        'reads_unmapped': results[file_key]["reads_unmapped"], 
-        'insert_size_average': results[file_key]["insert_size_average"],
-        'insert_size_standard_deviation': results[file_key]["insert_size_standard_deviation"]
+        'reads_mapped': int(common.get_group_from_file("reads mapped:\t([0-9]+)", file_path)),
+        'reads_unmapped': int(common.get_group_from_file("reads unmapped:\t([0-9]+)", file_path)),
+        'insert_size_average': float(common.get_group_from_file("insert size average:\t([0-9]+(.?)[0-9]*)", file_path)),
+        'insert_size_standard_deviation': float(common.get_group_from_file("insert size standard deviation:\t([0-9]+(.?)[0-9]*)", file_path)),
     }
 
 
