@@ -90,7 +90,7 @@ def extract_contig_stats(mapping_qc: Category, results: Dict, component_name: st
     file_name = "contigs.stats"
     file_key = common.json_key_cleaner(file_name)
     file_path = os.path.join(component_name, file_name)
-
+    results[file_key] = {}
     with open(file_path, "r") as fh:
         buffer = fh.readlines()
     for line in buffer:
