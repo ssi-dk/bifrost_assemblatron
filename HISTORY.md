@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2_2_14] - 2021-02-15
+### Notes
+Fixed datadump on bbmap due to multispaces
+### Changed
+- bifrost_assemblatron/datadump.py
+  
+
+## [v2_2_9 - v2_2_13] - 2021-02-15
+### Notes
+Forgot to update HISTORY.md
+
+- setup.py 
+  - updated bifrostlib
+
 ## [v2_2_8] - 2021-02-11
 ### Notes
 Switched install pip for prod to -e
