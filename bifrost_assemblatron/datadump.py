@@ -50,9 +50,9 @@ def extract_bbuk_log(denovo_assembly: Category, results: Dict, component_name: s
     file_name = "log/setup__filter_reads_with_bbduk.err.log"
     file_key = common.json_key_cleaner(file_name)
     file_path = os.path.join(component_name, file_name)
-    reads_in = common.get_group_from_file("readsIn:\s([0-9]+),", file_path)
+    reads_in = common.get_group_from_file("readsIn:\s*([0-9]+),", file_path)
     reads_in = int(reads_in) if reads_in != None else 0
-    reads_removed = common.get_group_from_file("readsRemoved:\s([0-9]+),", file_path)
+    reads_removed = common.get_group_from_file("readsRemoved:\s*([0-9]+),", file_path)
     reads_removed = int(reads_removed) if reads_removed != None else 0
     denovo_assembly["summary"]["number_of_reads"] = reads_in
     denovo_assembly["summary"]["number_of_filtered_reads"] = reads_in - reads_removed 
