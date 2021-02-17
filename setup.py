@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='bifrost_assemblatron',
-    version='v2_2_14',
+    version='v2_2_15',
     description='Datahandling functions for bifrost (later to be API interface)',
     url='https://github.com/ssi-dk/bifrost_assemblatron',
     author="Kim Ng, Martin Basterrechea",
