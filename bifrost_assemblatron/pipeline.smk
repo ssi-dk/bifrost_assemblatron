@@ -91,9 +91,9 @@ rule setup__filter_reads_with_bbduk:
     output:
         filtered_reads = temp(f"{component['name']}/filtered.fastq")
     params:
-        adapters = component["resources"]["adapters_fasta"]
+        adapters = component['resources']['adapters_fasta']  # This is now done to the root of the continuum container
     shell:
-        "java -ea -cp /opt/conda/opt/bbmap-38.58-0/current/ jgi.BBDuk in={input.reads[0]} in2={input.reads[1]} out={output.filtered_reads} ref={params.adapters} ktrim=r k=23 mink=11 hdist=1 tbo qtrim=r minlength=30 json=t 1> {log.out_file} 2> {log.err_file}"
+        "java -ea -cp /opt/conda/opt/bbmap-38.58-0/current/ jgi.BBDuk in={input.reads[0]} in2={input.reads[1]} out={output.filtered_reads} ref={params.adapters} ktrim=r k=23 mink=11 hdist=1 tbo qtrim=r minlength=30 1> {log.out_file} 2> {log.err_file}"
 
 
 rule_name = "assembly__skesa"
@@ -331,9 +331,10 @@ rule datadump:
     input:
         #* Dynamic section: start ******************************************************************
         rules.rename_contigs.output.contigs,  # Needs to be output of final rule
+        rules.assembly_check__quast_on_contigs.output.quast,
+        rules.post_assembly__samtools_stats.output.stats,
         rules.summarize__variants.output._file,
-        rules.summarize__depth.output._file,
-        rules.summarize__depth.output._file2
+        rules.summarize__depth.output._file
         #* Dynamic section: end ********************************************************************
     output:
         complete = rules.all.input

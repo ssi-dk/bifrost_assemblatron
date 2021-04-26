@@ -22,6 +22,7 @@ def test_connection():
 
 
 class TestBifrostAssemblatron:
+    component_name = "assemblatron__v2_2_15"
     current_dir = os.getcwd()
     test_dir = "/bifrost/test_data/output/test__assemblatron/"
     json_entries = [
@@ -83,6 +84,6 @@ class TestBifrostAssemblatron:
             "--outdir", self.test_dir
         ]
         launcher.main(args=test_args)
-        assert os.path.isfile(f"{self.test_dir}/assemblatron__v2_2_1/datadump_complete")
+        assert os.path.isfile(f"{self.test_dir}/{self.component_name}/datadump_complete")
         shutil.rmtree(self.test_dir)
-        assert not os.path.isdir(f"{self.test_dir}/assemblatron__v2_2_1")
+        assert not os.path.isdir(f"{self.test_dir}/{self.component_name}")

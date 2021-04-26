@@ -58,7 +58,7 @@ def rule__summarize_depth(input: object, output: object, component_json: Dict, l
             fh.write(traceback.format_exc())
 
 
-rule__greater_than_min_reads_check(
+rule__summarize_depth(
     snakemake.input,
     snakemake.output,
     snakemake.params.component_json,
