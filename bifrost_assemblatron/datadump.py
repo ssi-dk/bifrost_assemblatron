@@ -20,14 +20,18 @@ def extract_contigs_sum_cov(denovo_assembly: Category, mapping_qc: Category, res
     number_contigs = 0
     length_contigs = 0
     depth_contigs = 0
+    number_contigs_500 = 0
     for contig in contig_summary_yaml:
+        if contig_summary_yaml[contig]['total_length'] > 500:
+            number_contigs_500 += 1
         number_contigs += 1
         length_contigs += contig_summary_yaml[contig]["total_length"] 
         depth_contigs += contig_summary_yaml[contig]["total_depth"]
     denovo_assembly["summary"]["contigs"] = number_contigs
     denovo_assembly["summary"]["length"] = length_contigs
     denovo_assembly["summary"]["depth"] = float(depth_contigs/length_contigs)
-    
+    denovo_assembly['summary']['contigs_500'] = number_contigs_500
+
     # For x10
     number_contigs = 0
     length_contigs = 0
