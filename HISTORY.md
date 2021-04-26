@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [v2_2_16] - 2021-04-26
+### Notes
+Added a contigs_500 in datadump for qc_score, easiest way to do it
+### changed
+- bifrost_assemblatron/datadump.py
 ## [v2_2_15] - 2021-02-17
 ### Notes
 bifrostlib bump for datetime bug
