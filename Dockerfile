@@ -24,8 +24,9 @@ ONBUILD RUN \
     conda install -yq -c conda-forge -c bioconda -c default samtools==1.11; \
     conda install -yq -c conda-forge -c bioconda -c default cyvcf2==0.30.1; \
     # Don't use conda for Quast they cap the python version which causes issues with install
-    pip install -q quast==5.0.2;
-
+    pip install -q quast==5.0.2; \
+    # this version is not available in conda yet and I can't be arsed checking if previous ones work with cyvcf2
+    pip install numpy==1.21.5;
 
 #---------------------------------------------------------------------------------------------------
 # Base for dev environement

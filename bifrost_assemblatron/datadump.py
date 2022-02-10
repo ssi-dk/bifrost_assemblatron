@@ -113,10 +113,8 @@ def extract_contig_stats(mapping_qc: Category, results: Dict, component_name: st
 
 
 def save_contigs_locations(contigs: Category, results: Dict, component_name: str) -> None:
-    #base_dir = os.path.abspath(__file__) # datadump is one level into from where the pipeline is exec
     file_name = "contigs.fasta"
     file_path = os.path.join(component_name, file_name)
-    file_path = os.path.abspath(file_path)
     contigs["summary"]["data"] = file_path
 
 def datadump(samplecomponent_ref_json: Dict):
