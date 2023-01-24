@@ -2,10 +2,10 @@
 #-Basic info----------------------------------------------------------------------------------------
 display_name: assemblatron
 #name is compound of display_name, code version, resource version
-name: assemblatron__v2_2_18
+name: assemblatron__v2.2.18
 version:
   schema: ["v2_1_0"]
-  code: v2_2_18
+  code: v2.2.18
 #---------------------------------------------------------------------------------------------------
 
 #-Details-------------------------------------------------------------------------------------------
@@ -35,7 +35,7 @@ options:
 
 #-Required resource files---------------------------------------------------------------------------
 resources:
-  adapters_fasta: "/bifrost/components/bifrost_assemblatron/resources/adapters.fasta"
+  adapters_fasta: "/home/krki/bifrost/components/bifrost_assemblatron/resources/adapters.fasta"
 #---------------------------------------------------------------------------------------------------
 
 #-Requirements to run component---------------------------------------------------------------------

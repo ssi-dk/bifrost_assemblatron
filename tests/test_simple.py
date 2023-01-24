@@ -22,9 +22,9 @@ def test_connection():
 
 
 class TestBifrostAssemblatron:
-    component_name = "assemblatron__v2_2_18"
+    component_name = "assemblatron__v2.2.18"
     current_dir = os.getcwd()
-    test_dir = "/bifrost/test_data/output/test__assemblatron/"
+    test_dir = "/home/krki/bifrost/test_data/output/test__assemblatron/"
     json_entries = [
         {
             "_id": {"$oid": "000000000000000000000001"},
@@ -34,8 +34,8 @@ class TestBifrostAssemblatron:
             "categories": {
                 "paired_reads": {
                     "summary": {
-                        "data": ["/bifrost/test_data/samples/S1_R1.fastq.gz",
-                                 "/bifrost/test_data/samples/S1_R2.fastq.gz"]
+                        "data": ["/home/krki/bifrost/test_data/samples/S1_R1.fastq.gz",
+                                 "/home/krki/bifrost/test_data/samples/S1_R2.fastq.gz"]
                     }
                 }
             }

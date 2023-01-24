@@ -29,7 +29,6 @@ try:
 except Exception as error:
     print(traceback.format_exc(), file=sys.stderr)
     raise Exception("failed to set sample, component and/or samplecomponent")
-
 onerror:
     if not samplecomponent.has_requirements():
         common.set_status_and_save(sample, samplecomponent, "Requirements not met")
@@ -91,9 +90,10 @@ rule setup__filter_reads_with_bbduk:
     output:
         filtered_reads = temp(f"{component['name']}/filtered.fastq")
     params:
+        conda_env_path = "/home/krki/mambaforge-pypy3/envs/bifrost_assemblatron_v2.2.18",
         adapters = component['resources']['adapters_fasta']  # This is now done to the root of the continuum container
     shell:
-        "java -ea -cp /opt/conda/opt/bbmap-38.58-0/current/ jgi.BBDuk in={input.reads[0]} in2={input.reads[1]} out={output.filtered_reads} ref={params.adapters} ktrim=r k=23 mink=11 hdist=1 tbo qtrim=r minlength=30 1> {log.out_file} 2> {log.err_file}"
+        "java -ea -cp {params.conda_env_path}/opt/bbmap-38.58-0/current/ jgi.BBDuk in={input.reads[0]} in2={input.reads[1]} out={output.filtered_reads} ref={params.adapters} ktrim=r k=23 mink=11 hdist=1 tbo qtrim=r minlength=30 1> {log.out_file} 2> {log.err_file}"
 
 
 rule_name = "assembly__skesa"
@@ -230,7 +230,7 @@ rule post_assembly__pileup:
         coverage = temp(f"{component['name']}/contigs.cov"),
         pileup = f"{component['name']}/contigs.pileup"
     shell:
-        "pileup.sh in={input.mapped} basecov={output.coverage} out={output.pileup} 1> {log.out_file} 2> {log.err_file}"
+        "pileup.sh -Xmx1000m -Xms1000m in={input.mapped} basecov={output.coverage} out={output.pileup} 1> {log.out_file} 2> {log.err_file}"
 
 
 rule_name = "summarize__depth"
@@ -272,7 +272,7 @@ rule post_assembly__call_variants:
     output:
         variants = temp(f"{component['name']}/contigs.vcf"),
     shell:
-        "callvariants.sh in={input.mapped} vcf={output.variants} ref={input.contigs} ploidy=1 clearfilters 1> {log.out_file} 2> {log.err_file}"
+        "callvariants.sh -Xmx1000m -Xms1000m in={input.mapped} vcf={output.variants} ref={input.contigs} ploidy=1 clearfilters 1> {log.out_file} 2> {log.err_file}"
 
 
 rule_name = "summarize__variants"

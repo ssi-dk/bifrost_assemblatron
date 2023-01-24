@@ -67,9 +67,9 @@ def extract_quast_report(denovo_assembly: Category, results: Dict, component_nam
     file_key = common.json_key_cleaner(file_name)
     file_path = os.path.join(component_name, file_name)
     results[file_key] = {
-        "N75": int(common.get_group_from_file("N75\t([0-9]+)", file_path)),
+        "N90": int(common.get_group_from_file("N90\t([0-9]+)", file_path)),
         "L50": int(common.get_group_from_file("L50\t([0-9]+)", file_path)),
-        "L75": int(common.get_group_from_file("L75\t([0-9]+)", file_path))
+        "L90": int(common.get_group_from_file("L90\t([0-9]+)", file_path))
     }
     denovo_assembly['summary']["GC"] = float(common.get_group_from_file("GC \(%\)\t([0-9]+[\.]?[0-9]*)", file_path))
     denovo_assembly['summary']["N50"] = int(common.get_group_from_file("N50\t([0-9]+)", file_path))
