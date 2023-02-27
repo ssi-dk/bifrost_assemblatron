@@ -45,13 +45,13 @@ class TestBifrostAssemblatron:
 
     @classmethod
     def setup_class(cls):
-        client = pymongo.MongoClient(os.environ['BIFROST_DB_KEY'])
-        db = client.get_database()
-        cls.clear_all_collections(db)
-        col = db["samples"]
-        col.insert_many(cls.bson_entries)
-        launcher.initialize()
-        os.chdir(cls.current_dir)
+        with pymongo.MongoClient(os.environ['BIFROST_DB_KEY']) as client:
+            db = client.get_database()
+            cls.clear_all_collections(db)
+            col = db["samples"]
+            col.insert_many(cls.bson_entries)
+            launcher.initialize()
+            os.chdir(cls.current_dir)
 
     @classmethod
     def teardown_class(cls):
@@ -87,3 +87,13 @@ class TestBifrostAssemblatron:
         assert os.path.isfile(f"{self.test_dir}/{self.component_name}/datadump_complete")
         shutil.rmtree(self.test_dir)
         assert not os.path.isdir(f"{self.test_dir}/{self.component_name}")
+
+    def test_db_output(self):
+        with pymongo.MongoClient(os.environ['BIFROST_DB_KEY']) as client:
+            db = client.get_database()
+            sample = db['samples']
+            sample_data = sample.find({})
+            print(sample_data)
+            assert len(sample_data) == 1
+            assert sample_data[0]['categories']['contigs']['summary']['data'] == self.test_dir + 'S1.fasta'
+
