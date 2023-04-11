@@ -230,7 +230,7 @@ rule post_assembly__pileup:
         coverage = temp(f"{component['name']}/contigs.cov"),
         pileup = f"{component['name']}/contigs.pileup"
     shell:
-        "pileup.sh in={input.mapped} basecov={output.coverage} out={output.pileup} 1> {log.out_file} 2> {log.err_file}"
+        "pileup.sh -Xmx1000m -Xms1000m in={input.mapped} basecov={output.coverage} out={output.pileup} 1> {log.out_file} 2> {log.err_file}"
 
 
 rule_name = "summarize__depth"
@@ -272,7 +272,7 @@ rule post_assembly__call_variants:
     output:
         variants = temp(f"{component['name']}/contigs.vcf"),
     shell:
-        "callvariants.sh in={input.mapped} vcf={output.variants} ref={input.contigs} ploidy=1 clearfilters 1> {log.out_file} 2> {log.err_file}"
+        "callvariants.sh -Xmx1000m -Xms1000m in={input.mapped} vcf={output.variants} ref={input.contigs} ploidy=1 clearfilters 1> {log.out_file} 2> {log.err_file}"
 
 
 rule_name = "summarize__variants"
