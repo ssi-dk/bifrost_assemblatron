@@ -40,6 +40,20 @@ then
   echo "Starting computerome install"
   module load tools computerome_utils/2.0
   module load tools anaconda3/2022.10
+  #if $BIFROST_CONDA_PATH is not set then exit with help message
+  if [ -z "$BIFROST_CONDA_PATH" ]
+  then
+    echo "Please set $BIFROST_CONDA_PATH variable to your prefered env install location"
+    echo "Example:"
+    echo "export BIFROST_CONDA_PATH=/path/to/env/install/location"
+    exit 1
+  else
+    echo -e "\nAdding conda envs_dirs and pkgs_dirs"
+    echo "conda config --add envs_dirs $BIFROST_CONDA_PATH/envs"
+    echo "conda config --add pkgs_dirs $BIFROST_CONDA_PATH/pkgs"
+    conda config --add envs_dirs $BIFROST_CONDA_PATH/envs
+    conda config --add pkgs_dirs $BIFROST_CONDA_PATH/pkgs
+  fi
 fi
 
 # Begin script
@@ -95,7 +109,7 @@ then
   if test -f "$CUSTOM_INSTALL_PATH"
   then
     echo -e "\nIf you want to run the custom install part, you can execute:"
-    echo "bash $CUSTOM_INSTALL_PATH $parameterI"
+    echo "bash $CUSTOM_INSTALL_PATH -i $parameterI"
   fi
   exit 1
 fi
@@ -113,6 +127,14 @@ fi
 
 if $(conda env list | grep -q "$ENV_NAME")
 then
+  if [ "$parameterI" == "COMP" ]
+  then
+    echo -e "\nRemoving conda envs_dirs and pkgs_dirs"
+    echo "conda config --remove envs_dirs $BIFROST_CONDA_PATH/envs"
+    echo "conda config --remove pkgs_dirs $BIFROST_CONDA_PATH/pkgs"
+    conda config --remove envs_dirs $BIFROST_CONDA_PATH/envs
+    conda config --remove pkgs_dirs $BIFROST_CONDA_PATH/pkgs
+  fi
   echo "Environment $ENV_NAME was created"
 else
   echo "Environment $ENV_NAME was not created"
@@ -124,6 +146,5 @@ fi
 if test -f "$CUSTOM_INSTALL_PATH";
 then
   echo -e "\nRunning custom_install.sh"
-  bash $CUSTOM_INSTALL_PATH $parameterI
+  bash $CUSTOM_INSTALL_PATH -i $parameterI
 fi
-
