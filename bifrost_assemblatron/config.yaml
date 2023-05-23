@@ -35,7 +35,7 @@ options:
 
 #-Required resource files---------------------------------------------------------------------------
 resources:
-  adapters_fasta: "/home/krki/bifrost/components/bifrost_assemblatron/resources/adapters.fasta"
+  adapters_fasta: "~/bifrost/components/bifrost_assemblatron/resources/adapters.fasta"
 #---------------------------------------------------------------------------------------------------
 
 #-Requirements to run component---------------------------------------------------------------------
