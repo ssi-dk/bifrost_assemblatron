@@ -20,11 +20,25 @@ def test_connection():
     assert datahandling.has_a_database_connection()
     assert "TEST" in os.environ['BIFROST_DB_KEY'].upper()  # A very basic piece of protection ensuring the word test is in the DB
 
+def test_cwd():
+    # The ~ or root_path where bifrost is installed
+    current_dir = os.getcwd().split('/bifrost')[0]
+    print(f'bifrost cwd: {current_dir}')
+    assert current_dir != ''
 
-class TestBifrostAssemblatron:
+class TestBifrostAssemblatron():
+    # This class stores the paths needed for this tests
+
     component_name = "assemblatron__v2.2.20"
-    current_dir = os.getcwd()
-    test_dir = "/home/krki/bifrost/test_data/output/test__assemblatron/"
+
+    # This following part gets the ~ or root_path where bifrost is installed
+    # Fx. in a local linux system: /home/username
+    current_dir = os.getcwd().split('/bifrost')[0]
+
+    test_dir = f"{current_dir}/bifrost/test_data/output/test__assemblatron"
+    r1 = f"{current_dir}/bifrost/test_data/samples/S1_R1.fastq.gz"
+    r2 = f"{current_dir}/bifrost/test_data/samples/S1_R2.fastq.gz"
+
     json_entries = [
         {
             "_id": {"$oid": "000000000000000000000001"},
@@ -34,8 +48,8 @@ class TestBifrostAssemblatron:
             "categories": {
                 "paired_reads": {
                     "summary": {
-                        "data": ["/home/krki/bifrost/test_data/samples/S1_R1.fastq.gz",
-                                 "/home/krki/bifrost/test_data/samples/S1_R2.fastq.gz"]
+                        "data": [r1,
+                                 r2]
                     }
                 }
             }
@@ -78,22 +92,27 @@ class TestBifrostAssemblatron:
         if os.path.isdir(self.test_dir):
             shutil.rmtree(self.test_dir)
 
-        os.mkdir(self.test_dir)
+        os.makedirs(self.test_dir)
         test_args = [
             "--sample_name", "S1",
             "--outdir", self.test_dir
         ]
         launcher.main(args=test_args)
-        assert os.path.isfile(f"{self.test_dir}/{self.component_name}/datadump_complete")
+        assert os.path.exists(f"{self.test_dir}/{self.component_name}/datadump_complete") == True
         shutil.rmtree(self.test_dir)
         assert not os.path.isdir(f"{self.test_dir}/{self.component_name}")
 
     def test_db_output(self):
         with pymongo.MongoClient(os.environ['BIFROST_DB_KEY']) as client:
+            # databases
+            print(f'databases: {client.list_database_names()}')
             db = client.get_database()
+            # collections
+            print(f'collections: {db.list_collection_names()}')
             sample = db['samples']
-            sample_data = sample.find({})
-            print(sample_data)
-            assert len(sample_data) == 1
-            assert sample_data[0]['categories']['contigs']['summary']['data'] == self.test_dir + 'S1.fasta'
-
+            sample_data = sample.find_one({})
+            # sample_data
+            print(f'sample_data: {sample_data}')
+            
+            assert len(sample_data) > 1
+            assert sample_data['categories']['contigs']['summary']['data'] == f'{self.component_name}/contigs.fasta'
