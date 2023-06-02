@@ -21,23 +21,20 @@ def test_connection():
     assert "TEST" in os.environ['BIFROST_DB_KEY'].upper()  # A very basic piece of protection ensuring the word test is in the DB
 
 def test_cwd():
-    # The ~ or root_path where bifrost is installed
-    current_dir = os.getcwd().split('/bifrost')[0]
-    print(f'bifrost cwd: {current_dir}')
-    assert current_dir != ''
+    bifrost_install_dir = os.environ['BIFROST_INSTALL_DIR']
+    print(f'bifrost cwd: {bifrost_install_dir}')
+    assert bifrost_install_dir != ''
 
 class TestBifrostAssemblatron():
     # This class stores the paths needed for this tests
 
     component_name = "assemblatron__v2.2.20"
 
-    # This following part gets the ~ or root_path where bifrost is installed
-    # Fx. in a local linux system: /home/username
-    current_dir = os.getcwd().split('/bifrost')[0]
+    bifrost_install_dir = os.environ['BIFROST_INSTALL_DIR']
 
-    test_dir = f"{current_dir}/bifrost/test_data/output/test__assemblatron"
-    r1 = f"{current_dir}/bifrost/test_data/samples/S1_R1.fastq.gz"
-    r2 = f"{current_dir}/bifrost/test_data/samples/S1_R2.fastq.gz"
+    test_dir = f"{bifrost_install_dir}/bifrost/test_data/output/test__assemblatron"
+    r1 = f"{bifrost_install_dir}/bifrost/test_data/samples/S1_R1.fastq.gz"
+    r2 = f"{bifrost_install_dir}/bifrost/test_data/samples/S1_R2.fastq.gz"
 
     json_entries = [
         {
@@ -65,7 +62,7 @@ class TestBifrostAssemblatron():
             col = db["samples"]
             col.insert_many(cls.bson_entries)
             launcher.initialize()
-            os.chdir(cls.current_dir)
+            os.chdir(cls.bifrost_install_dir)
 
     @classmethod
     def teardown_class(cls):
@@ -104,14 +101,11 @@ class TestBifrostAssemblatron():
 
     def test_db_output(self):
         with pymongo.MongoClient(os.environ['BIFROST_DB_KEY']) as client:
-            # databases
             print(f'databases: {client.list_database_names()}')
             db = client.get_database()
-            # collections
             print(f'collections: {db.list_collection_names()}')
             sample = db['samples']
             sample_data = sample.find_one({})
-            # sample_data
             print(f'sample_data: {sample_data}')
             
             assert len(sample_data) > 1

@@ -35,6 +35,12 @@ onerror:
     if samplecomponent['status'] == "Running":
         common.set_status_and_save(sample, samplecomponent, "Failure")
 
+
+envvars:
+    "BIFROST_INSTALL_DIR",
+    "CONDA_PREFIX"
+
+
 rule all:
     input:
         # file is defined by datadump function
@@ -74,7 +80,6 @@ rule check_requirements:
 
 #- Templated section: end --------------------------------------------------------------------------
 #* Dynamic section: start **************************************************************************
-current_dir = os.getcwd().split('/bifrost')[0]
 rule_name = "setup__filter_reads_with_bbduk"
 rule setup__filter_reads_with_bbduk:
     message:
@@ -90,8 +95,7 @@ rule setup__filter_reads_with_bbduk:
     output:
         filtered_reads = temp(f"{component['name']}/filtered.fastq")
     params:
-        conda_env_path = f"{current_dir}/anaconda3/envs/bifrost_assemblatron_v2.2.20",
-        adapters = component['resources']['adapters_fasta']  # This is now done to the root of the continuum container
+        conda_env_path = f"{os.environ['CONDA_PREFIX']}",
     shell:
         "java -ea -cp {params.conda_env_path}/opt/bbmap-38.58-0/current/ jgi.BBDuk in={input.reads[0]} in2={input.reads[1]} out={output.filtered_reads} ref={params.adapters} ktrim=r k=23 mink=11 hdist=1 tbo qtrim=r minlength=30 1> {log.out_file} 2> {log.err_file}"
 
