@@ -35,6 +35,10 @@ onerror:
     if samplecomponent['status'] == "Running":
         common.set_status_and_save(sample, samplecomponent, "Failure")
 
+envvars:
+    "BIFROST_INSTALL_DIR",
+    "CONDA_PREFIX"
+
 rule all:
     input:
         # file is defined by datadump function
@@ -90,8 +94,8 @@ rule setup__filter_reads_with_bbduk:
     output:
         filtered_reads = temp(f"{component['name']}/filtered.fastq")
     params:
-        conda_env_path = "/home/krki/mambaforge-pypy3/envs/bifrost_assemblatron_v2.2.18",
-        adapters = component['resources']['adapters_fasta']  # This is now done to the root of the continuum container
+        conda_env_path = f"{os.environ['CONDA_PREFIX']}",
+        adapters = f"{os.environ['BIFROST_INSTALL_DIR']}/bifrost/components/bifrost_{component['display_name']}/{component['resources']['adapters_fasta']}"  # This is now done to the root of the continuum container
     shell:
         "java -ea -cp {params.conda_env_path}/opt/bbmap-38.58-0/current/ jgi.BBDuk in={input.reads[0]} in2={input.reads[1]} out={output.filtered_reads} ref={params.adapters} ktrim=r k=23 mink=11 hdist=1 tbo qtrim=r minlength=30 1> {log.out_file} 2> {log.err_file}"
 
@@ -113,187 +117,6 @@ rule assembly__skesa:
         contigs = f"{component['name']}/contigs.fasta"
     shell:
         "skesa --use_paired_ends --fastq {input.filtered_reads} --contigs_out {output.contigs} 1> {log.out_file} 2> {log.err_file}"
-
-
-rule_name = "assembly_check__quast_on_contigs"
-rule assembly_check__quast_on_contigs:
-    # Static
-    message:
-        f"Running step:{rule_name}"
-    log:
-        out_file = f"{component['name']}/log/{rule_name}.out.log",
-        err_file = f"{component['name']}/log/{rule_name}.err.log",
-    benchmark:
-        f"{component['name']}/benchmarks/{rule_name}.benchmark"
-    # Dynamic
-    input:
-        contigs = rules.assembly__skesa.output
-    output:
-        quast = directory(f"{component['name']}/quast")
-    shell:
-        "quast.py {input.contigs} -o {output.quast} 1> {log.out_file} 2> {log.err_file}"
-
-
-rule_name = "assembly_check__sketch_on_contigs"
-rule assembly_check__sketch_on_contigs:
-    # Static
-    message:
-        f"Running step:{rule_name}"
-    log:
-        out_file = f"{component['name']}/log/{rule_name}.out.log",
-        err_file = f"{component['name']}/log/{rule_name}.err.log",
-    benchmark:
-        f"{component['name']}/benchmarks/{rule_name}.benchmark"
-    # Dynamic
-    input:
-        contigs = rules.assembly__skesa.output
-    output:
-        sketch = f"{component['name']}/contigs.sketch"
-    shell:
-        "bbsketch.sh in={input.contigs} out={output.sketch} 1> {log.out_file} 2> {log.err_file}"
-
-
-rule_name = "post_assembly__stats"
-rule post_assembly__stats:
-    # Static
-    message:
-        f"Running step:{rule_name}"
-    log:
-        out_file = f"{component['name']}/log/{rule_name}.out.log",
-        err_file = f"{component['name']}/log/{rule_name}.err.log",
-    benchmark:
-        f"{component['name']}/benchmarks/{rule_name}.benchmark"
-    # Dynamic
-    message:
-        "Running step: {rule}"
-    input:
-        contigs = rules.assembly__skesa.output
-    output:
-        stats = touch(f"{component['name']}/post_assermbly__stats")
-    shell:
-        "stats.sh {input.contigs} 1> {log.out_file} 2> {log.err_file}"
-
-
-rule_name = "post_assembly__mapping"
-rule post_assembly__mapping:
-    # Static
-    message:
-        f"Running step:{rule_name}"
-    log:
-        out_file = f"{component['name']}/log/{rule_name}.out.log",
-        err_file = f"{component['name']}/log/{rule_name}.err.log",
-    benchmark:
-        f"{component['name']}/benchmarks/{rule_name}.benchmark"
-    # Dynamic
-    input:
-        contigs = rules.assembly__skesa.output,
-        filtered_reads = rules.setup__filter_reads_with_bbduk.output.filtered_reads
-    output:
-        mapped = temp(f"{component['name']}/contigs.sam")
-    shell:
-        "minimap2 --MD -ax sr {input.contigs} {input.filtered_reads} 1> {output.mapped} 2> {log.err_file}"
-
-
-rule_name = "post_assembly__samtools_stats"
-rule post_assembly__samtools_stats:
-    # Static
-    message:
-        f"Running step:{rule_name}"
-    log:
-        out_file = f"{component['name']}/log/{rule_name}.out.log",
-        err_file = f"{component['name']}/log/{rule_name}.err.log",
-    benchmark:
-        f"{component['name']}/benchmarks/{rule_name}.benchmark"
-    # Dynamic
-    input:
-        mapped = rules.post_assembly__mapping.output.mapped
-    output:
-        stats = f"{component['name']}/contigs.stats",
-    shell:
-        "samtools stats {input.mapped} 1> {output.stats} 2> {log.err_file}"
-
-
-rule_name = "post_assembly__pileup"
-rule post_assembly__pileup:
-    # Static
-    message:
-        f"Running step:{rule_name}"
-    log:
-        out_file = f"{component['name']}/log/{rule_name}.out.log",
-        err_file = f"{component['name']}/log/{rule_name}.err.log",
-    benchmark:
-        f"{component['name']}/benchmarks/{rule_name}.benchmark"
-    # Dynamic
-    input:
-        mapped = rules.post_assembly__mapping.output.mapped
-    output:
-        coverage = temp(f"{component['name']}/contigs.cov"),
-        pileup = f"{component['name']}/contigs.pileup"
-    shell:
-        "pileup.sh -Xmx1000m -Xms1000m in={input.mapped} basecov={output.coverage} out={output.pileup} 1> {log.out_file} 2> {log.err_file}"
-
-
-rule_name = "summarize__depth"
-rule summarize__depth:
-    # Static
-    message:
-        f"Running step:{rule_name}"
-    log:
-        out_file = f"{component['name']}/log/{rule_name}.out.log",
-        err_file = f"{component['name']}/log/{rule_name}.err.log",
-    benchmark:
-        f"{component['name']}/benchmarks/{rule_name}.benchmark"
-    # Dynamic
-    input:
-        coverage = rules.post_assembly__pileup.output.coverage
-    params:
-        component_json = component.json
-    output:
-        _file = f"{component['name']}/contigs.sum.cov",
-        _file2= f"{component['name']}/contigs.bin.cov"
-    script:
-        os.path.join(os.path.dirname(workflow.snakefile), "rule__summarize_depth.py")
-
-
-rule_name = "post_assembly__call_variants"
-rule post_assembly__call_variants:
-    # Static
-    message:
-        f"Running step:{rule_name}"
-    log:
-        out_file = f"{component['name']}/log/{rule_name}.out.log",
-        err_file = f"{component['name']}/log/{rule_name}.err.log",
-    benchmark:
-        f"{component['name']}/benchmarks/{rule_name}.benchmark"
-    # Dynamic
-    input:
-        contigs = rules.assembly__skesa.output,
-        mapped = rules.post_assembly__mapping.output.mapped
-    output:
-        variants = temp(f"{component['name']}/contigs.vcf"),
-    shell:
-        "callvariants.sh -Xmx1000m -Xms1000m in={input.mapped} vcf={output.variants} ref={input.contigs} ploidy=1 clearfilters 1> {log.out_file} 2> {log.err_file}"
-
-
-rule_name = "summarize__variants"
-rule summarize__variants:
-    # Static
-    message:
-        f"Running step:{rule_name}"
-    log:
-        out_file = f"{component['name']}/log/{rule_name}.out.log",
-        err_file = f"{component['name']}/log/{rule_name}.err.log",
-    benchmark:
-        f"{component['name']}/benchmarks/{rule_name}.benchmark"
-    # Dynamic
-    input:
-        variants = rules.post_assembly__call_variants.output.variants
-    params:
-        component_json = component.json
-    output:
-        _file = f"{component['name']}/contigs.variants",
-    script:
-        os.path.join(os.path.dirname(workflow.snakefile), "rule__summarize_variants.py")
 
 
 rule_name = "rename_contigs"
@@ -331,10 +154,6 @@ rule datadump:
     input:
         #* Dynamic section: start ******************************************************************
         rules.rename_contigs.output.contigs,  # Needs to be output of final rule
-        rules.assembly_check__quast_on_contigs.output.quast,
-        rules.post_assembly__samtools_stats.output.stats,
-        rules.summarize__variants.output._file,
-        rules.summarize__depth.output._file
         #* Dynamic section: end ********************************************************************
     output:
         complete = rules.all.input

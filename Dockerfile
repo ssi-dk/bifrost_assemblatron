@@ -7,7 +7,7 @@ ARG BIFROST_COMPONENT_NAME="bifrost_assemblatron"
 #---------------------------------------------------------------------------------------------------
 # Programs for all environments
 #---------------------------------------------------------------------------------------------------
-FROM continuumio/miniconda3:4.8.2 as build_base
+FROM continuumio/miniconda3:22.11.1 as build_base
 ONBUILD ARG BIFROST_COMPONENT_NAME
 ONBUILD ARG BUILD_ENV
 ONBUILD ARG MAINTAINER
@@ -17,16 +17,18 @@ ONBUILD LABEL \
     environment="${BUILD_ENV}" \
     maintainer="${MAINTAINER}"
 ONBUILD RUN \
-    conda install -yq -c conda-forge -c bioconda -c default snakemake-minimal==5.31.1; \
-    conda install -yq -c conda-forge -c bioconda -c default bbmap==38.58; \
-    conda install -yq -c conda-forge -c bioconda -c default skesa==2.4.0; \
-    conda install -yq -c conda-forge -c bioconda -c default minimap2==2.17; \
-    conda install -yq -c conda-forge -c bioconda -c default samtools==1.11; \
-    conda install -yq -c conda-forge -c bioconda -c default cyvcf2==0.30.1; \
+    conda install -yq -c conda-forge -c bioconda -c default python=3.8; \
+    conda install -yq -c conda-forge -c bioconda -c default snakemake-minimal==7.24.0; \
+    conda install -yq -c conda-forge -c bioconda -c default bbmap==39.01; \
+    conda install -yq -c conda-forge -c bioconda -c default skesa==2.4.0;
+    #conda install -yq -c conda-forge -c bioconda -c default libmagic==5.39;
+    #conda install -yq -c conda-forge -c bioconda -c default numpy==1.23.5;
+    #conda install -yq -c conda-forge -c bioconda -c default minimap2==2.17; \
+    #conda install -yq -c conda-forge -c bioconda -c default samtools==1.11; \
+    #conda install -yq -c conda-forge -c bioconda -c default cyvcf2==0.30.1; \
     # Don't use conda for Quast they cap the python version which causes issues with install
-    pip install -q quast==5.0.2; \
+    #pip install -q quast==5.0.2; \
     # this version is not available in conda yet and I can't be arsed checking if previous ones work with cyvcf2
-    pip install numpy==1.21.5;
 
 #---------------------------------------------------------------------------------------------------
 # Base for dev environement
