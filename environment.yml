@@ -18,3 +18,4 @@ dependencies:
     - argh
     - watchdog
     - bifrostlib
+    - -e .

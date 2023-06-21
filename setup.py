@@ -2,8 +2,8 @@ from setuptools import setup, find_packages
 
 setup(
     name='bifrost_assemblatron',
-    version='v2.2.19',
-    description='Datahandling functions for bifrost (later to be API interface)',
+    version='2.2.20',
+    description='Denovo assembly component for Bifrost',
     url='https://github.com/ssi-dk/bifrost_assemblatron',
     author="Kim Ng, Martin Basterrechea",
     author_email="kimn@ssi.dk",

@@ -77,7 +77,6 @@ rule check_requirements:
                 fh.write("")
 
 #- Templated section: end --------------------------------------------------------------------------
-
 #* Dynamic section: start **************************************************************************
 rule_name = "setup__filter_reads_with_bbduk"
 rule setup__filter_reads_with_bbduk:
