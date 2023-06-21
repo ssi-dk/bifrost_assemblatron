@@ -42,7 +42,7 @@ def sample(use_collection):
 
 
 class TestBifrostAssemblatron:
-    component_name = "assemblatron__v2.2.19"
+    component_name = "assemblatron__v2.2.20"
     current_dir = os.getcwd()
     json_entries = [
         {
