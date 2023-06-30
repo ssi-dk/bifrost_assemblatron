@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='bifrost_assemblatron',
-    version='2.3.0',
+    version='2.3.1',
     description='Denovo assembly component for Bifrost',
     url='https://github.com/ssi-dk/bifrost_assemblatron',
     author="Kim Ng, Martin Basterrechea",
