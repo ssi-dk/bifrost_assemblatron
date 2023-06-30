@@ -132,7 +132,7 @@ rule rename_contigs:
     input:
         contigs = rules.assembly__skesa.output,
     output:
-        contigs = f"{component['name']}/{sample['display_name']}.fasta"
+        contigs = f"{component['name']}/{sample['name']}.fasta"
     params:
         sample_name = sample['display_name']
     shell:
