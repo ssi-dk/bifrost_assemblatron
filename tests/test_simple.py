@@ -78,7 +78,7 @@ class TestBifrostAssemblatron:
         launcher.main(args=test_args)
         assert os.path.isfile(f"{clean_dir}/{self.component_name}/datadump_complete")
         sample_data = list(samples.find({}))
-        print(sample_data)
+        db_contigs_path = sample_data[0]['categories']['contigs']['summary']['data']
         assert len(sample_data) == 1
-        assert sample_data[0]['categories']['contigs']['summary']['data'] == clean_dir + '/S1.fasta'
-
+        assert db_contigs_path == clean_dir + '/S1.fasta'
+        assert os.path.isfile(db_contigs_path)
