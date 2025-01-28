@@ -8,6 +8,7 @@ from typing import Dict
 import os
 from Bio import SeqIO
 import hashlib
+from datetime import datetime
 
 def extract_bbuk_log(denovo_assembly: Category, results: Dict, component_name: str) -> None:
     file_name = "log/setup__filter_reads_with_bbduk.err.log"
@@ -40,6 +41,7 @@ def save_assembly_data(assembly: Category, results: Dict, component_name: str, s
     contig_data = {}
     contig_lengths = []
     gc_contents = []
+    date = datetime.now().strftime('%Y-%m-%d')
 
     with open(file_path, 'r') as fasta_file:
         for record in SeqIO.parse(fasta_file, "fasta"):
@@ -52,7 +54,7 @@ def save_assembly_data(assembly: Category, results: Dict, component_name: str, s
             gc_contents.append(gc_content)
 
             if verbose:
-                print(f"Saving contig data for sample: {sample_name}, component: {component_name}")
+                print(f"Saving contig data for sample: {sample_name}, component: {component_name}, date {date}")
                 print(f"Contig Name: {contig_name}")
                 print(f"Length: {contig_length}")
                 print(f"GC Content: {gc_content}%")
@@ -68,7 +70,8 @@ def save_assembly_data(assembly: Category, results: Dict, component_name: str, s
             "fasta_md5": fasta_md5,
             "num_contigs": len(contig_data),
             "total_length": contig_lengths,
-            "gc_content": gc_contents
+            "gc_content": gc_contents,
+            "date_added": date
         }]
     }
 
