@@ -38,6 +38,7 @@ def save_contigs_data(contigs: Category, results: Dict, component_name: str, sam
 
     print(f"file path is {file_path}")
 
+    contig_data = {}
     contig_lengths = []
     gc_contents = []
     date = datetime.now().strftime('%Y-%m-%d')
@@ -47,7 +48,7 @@ def save_contigs_data(contigs: Category, results: Dict, component_name: str, sam
             contig_name = record.id  # Contig header
             print(f"{contig_name}")
             contig_seq = str(record.seq).replace("\n", "")  # Sequence without newlines
-            #contig_data[contig_name] = contig_seq
+            contig_data[contig_name] = contig_seq
             contig_length = len(contig_seq)
             gc_content = round((sum(contig_seq.count(x) for x in "GCgc") / contig_length) * 100, 2)
             contig_lengths.append(contig_length)
@@ -64,9 +65,10 @@ def save_contigs_data(contigs: Category, results: Dict, component_name: str, sam
     fasta_md5 = calculate_md5("".join(contig_data.values()))
 
     contigs["summary"]["md5"] = fasta_md5
-    contigs["summary"]["num_contigs"] = len(contig_lengths)
+    contigs["summary"]["num_contigs"] = len(contig_data.keys())
     contigs["summary"]["total_length"] = contig_lengths
     contigs["summary"]["gc_contents"] = gc_contents
+    contigs["summary"]["date_added"] = date
 
     """
     contigs["summary"] = {
