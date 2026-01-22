@@ -78,8 +78,8 @@ rule check_requirements:
 
 #- Templated section: end --------------------------------------------------------------------------
 #* Dynamic section: start **************************************************************************
-rule_name = "setup__filter_reads_with_bbduk"
-rule setup__filter_reads_with_bbduk:
+rule_name = "setup__filter_reads_with_fastp"
+rule setup__filter_reads_with_fastp:
     message:
         f"Running step:{rule_name}"
     log:
@@ -91,12 +91,12 @@ rule setup__filter_reads_with_bbduk:
         rules.check_requirements.output.check_file,
         reads = sample['categories']['paired_reads']['summary']['data']
     output:
-        filtered_reads = temp(f"{component['name']}/filtered.fastq")
+        filtered_reads = [f"{sample['name']}.R1.trim.fastq.gz", f"{sample['name']}.R2.trim.fastq.gz"]
+    threads: 8
     params:
-        conda_env_path = f"{os.environ['CONDA_PREFIX']}",
-        adapters = f"{os.environ['BIFROST_INSTALL_DIR']}/bifrost/components/bifrost_{component['display_name']}/{component['resources']['adapters_fasta']}"  # This is now done to the root of the continuum container
+        options = "-q 30 -e 30 -l 30 -y 30"
     shell:
-        "java -ea -cp {params.conda_env_path}/opt/bbmap-38.58-0/current/ jgi.BBDuk in={input.reads[0]} in2={input.reads[1]} out={output.filtered_reads} ref={params.adapters} ktrim=r k=23 mink=11 hdist=1 tbo qtrim=r minlength=30 1> {log.out_file} 2> {log.err_file}"
+        "fastp --in1 {input.reads[0]} --in2 {input.reads[1]} --out1 {output.filtered_reads[0]} --out2 {output.filtered_reads[1]} --threads {threads} {params.options}"
 
 
 rule_name = "assembly__skesa"
@@ -117,9 +117,8 @@ rule assembly__skesa:
     shell:
         "skesa --use_paired_ends --fastq {input.filtered_reads} --contigs_out {output.contigs} 1> {log.out_file} 2> {log.err_file}"
 
-
-rule_name = "rename_contigs"
-rule rename_contigs:
+rule_name = "assembly__spades"
+rule assembly__spades:
     # Static
     message:
         f"Running step:{rule_name}"
@@ -130,13 +129,36 @@ rule rename_contigs:
         f"{component['name']}/benchmarks/{rule_name}.benchmark"
     # Dynamic
     input:
-        contigs = rules.assembly__skesa.output,
+        rules.check_requirements.output.check_file,
+        #reads = sample['categories']['paired_reads']['summary']['data']
+        filtered_reads = rules.setup__filter_reads_with_fastp.output.filtered_reads,
     output:
-        contigs = f"{component['name']}/{sample['name']}.fasta"
+        outputdir = Directory(f"{component['name']}/spades")
+        scaffolds = f"{component['name']}/scaffolds.fasta"
+    threads: 8
+    shell:
+        "spades -1 {input.filtered_reads[0]} -2 {input.filtered_reads[1]} --threads {threads} --isolate -o {output.contigs} 1> {log.out_file} 2> {log.err_file} && cp {output.outputdir}/scaffolds.fasta {output.scaffolds}"
+
+
+rule_name = "rename_scaffolds"
+rule rename_scaffolds:
+    # Static
+    message:
+        f"Running step:{rule_name}"
+    log:
+        out_file = f"{component['name']}/log/{rule_name}.out.log",
+        err_file = f"{component['name']}/log/{rule_name}.err.log",
+    benchmark:
+        f"{component['name']}/benchmarks/{rule_name}.benchmark"
+    # Dynamic
+    input:
+        scaffolds = rules.assembly__spades.output.scaffolds,
+    output:
+        scaffolds = f"{component['name']}/{sample['name']}.fasta"
     params:
         sample_name = sample['display_name']
     shell:
-        "sed -e 's/Contig/{params.sample_name}/' {input.contigs} > {output.contigs}"
+        "sed -e 's/NODE/{params.sample_name}/' {input.scaffolds} > {output.scaffolds}"
 #* Dynamic section: end ****************************************************************************
 
 #- Templated section: start ------------------------------------------------------------------------
