@@ -152,13 +152,55 @@ rule rename_scaffolds:
         f"{component['name']}/benchmarks/{rule_name}.benchmark"
     # Dynamic
     input:
-        scaffolds = rules.assembly__spades.output.scaffolds,
+        scaffolds_in = rules.assembly__spades.output.scaffolds,
     output:
-        scaffolds = f"{component['name']}/{sample['name']}.fasta"
+        scaffolds_out = f"{component['name']}/{sample['name']}.fasta"
     params:
         sample_name = sample['display_name']
     shell:
-        "sed -e 's/NODE/{params.sample_name}/' {input.scaffolds} > {output.scaffolds}"
+        "sed -e 's/NODE/{params.sample_name}/' {input.scaffolds_in} > {output.scaffolds_out}"
+
+rule_name = "assembly_qc"
+rule assembly_qc:
+    # Static
+    message:
+        f"Running step:{rule_name}"
+    log:
+        out_file = f"{component['name']}/log/{rule_name}.out.log",
+        err_file = f"{component['name']}/log/{rule_name}.err.log",
+    benchmark:
+        f"{component['name']}/benchmarks/{rule_name}.benchmark"
+    # Dynamic
+    input:
+        scaffolds = rules.rename_scaffolds.output.scaffolds_out,
+    output:
+        scaffolds = f"{component['name']}/{sample['name']}_trimmed.fasta" 
+        statistics = f"{component['name']}/{sample['name']}_trimmed_stat.tsv"
+        failed_cov_scaffolds = f"{component['name']}/{sample['name']}_cov_fail.fasta"
+        failed_cov_statistics = f"{component['name']}/{sample['name']}_cov_fail_stat.tsv"
+        failed_length_scaffolds = f"{component['name']}/{sample['name']}_length_fail.fasta"
+        failed_length_statistics = f"{component['name']}/{sample['name']}_length_fail_stat.tsv"
+    params:
+        sample_name = sample['display_name'],
+        cov_threshold = 10
+        min_length = 500
+    shell: # i need to parse the dirname as well, to enure the output files are in the asseumed component[name] dir
+        """
+        passed_prefix="$(dirname "{output.scaffolds}")/$(basename "{output.scaffolds}" .fasta)"
+        failed_cov_prefix="$(dirname "{output.failed_cov_scaffolds}")/$(basename "{output.failed_cov_scaffolds}" .fasta)"
+        failed_len_prefix="$(dirname "{output.failed_length_scaffolds}")/$(basename "{output.failed_length_scaffolds}" .fasta)"
+
+        python rule__assembly_qc.py \
+          --assembly "{input.scaffolds}" \
+          --cov-threshold {params.cov_threshold} \
+          --min-contig-len {params.min_length} \
+          --passed "$passed_prefix" \
+          --failed-length "$failed_len_prefix" \
+          --failed-coverage "$failed_cov_prefix" \
+          --stdout \
+          > "{log.out_file}" 2> "{log.err_file}"
+        """
+
 #* Dynamic section: end ****************************************************************************
 
 #- Templated section: start ------------------------------------------------------------------------
