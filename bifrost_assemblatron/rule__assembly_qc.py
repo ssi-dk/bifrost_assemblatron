@@ -233,7 +233,7 @@ def calculate_stats(
         print(f"{label}\tcontigs={n}\tsum_len={total_len}\tGC={gc_pct_str}%\tN50={n50(lengths)}")
 
 
-def main() -> int:
+def parse():
     parser = argparse.ArgumentParser(
         description="Filter contigs by min length and coverage threshold; write FASTA outputs and per-output stats TSVs."
     )
@@ -280,8 +280,10 @@ def main() -> int:
     )
 
     parser.add_argument("--stdout", action="store_true", help="Also print summaries to stdout.")
-    args = parser.parse_args()
+    return parser.parse_args()
 
+def main() -> int:
+    args = parser()
     cov_threshold = float(args.cov_threshold)
     min_contig_len = int(args.min_contig_len)
 
@@ -342,17 +344,6 @@ def main() -> int:
             cov_threshold=cov_threshold,
             min_contig_len=min_contig_len,
             stdout=args.stdout,
-        )
-
-    # Messages to stderr
-    if filtered_short:
-        print(f"INFO: filtered out {filtered_short} contig(s) with length < {min_contig_len}.", file=sys.stderr)
-    if bad_headers:
-        print(f"WARNING: {bad_headers} header(s) did not match 'length_..._cov_...' pattern.", file=sys.stderr)
-    if failed_cov_fasta and failed_coverage_count:
-        print(
-            f"INFO: wrote {failed_coverage_count} contig(s) failing coverage (<{cov_threshold:g}) to {failed_cov_fasta}.",
-            file=sys.stderr,
         )
 
     return 0

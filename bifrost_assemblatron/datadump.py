@@ -23,21 +23,32 @@ def save_contigs(contigs: Category, component_name: str, sample_name: str) -> No
     if file_id is not None:
         contigs["summary"]["file_id"] = file_id
 
+def extract_assembly_statistics(contigs: Category, component_name: str, sample_name: str) -> None:
+    file_name = f"{sample_name}_trimmed_stat.tsv"
+    with open(file_name) as fh:
+        header = fh.next()
+        (group, cov_threshold, min_contig_len, contigs, sum_len, N50, avg_cov) = fh.readline().strip().split()
+        contigs["summary"]["contigs"] = contigs
+        contigs["summary"]["sum_len"] = sum_len
+        contigs["summary"]["N50"] = N50
+        contigs["summary"]["avg_cov"] = avg_cov
+    file_name = f"{sample_name}_cov_fail_stat.tsv"
+    with open(file_name) as fh:
+        header = fh.next()
+        (group, cov_threshold, min_contig_len, contigs, sum_len, N50, avg_cov) = fh.readline().strip().split()
+        contigs["summary"]["low_cov_len"] = sum_len
+        contigs["summary"]["low_cov_N50"] = N50
+        contigs["summary"]["low_cov_contigs"] = contigs
+        contigs["summary"]["low_cov_avg_cov"] = avg_cov
+    
+        
+
 
 def datadump(samplecomponent_ref_json: Dict):
     samplecomponent_ref = SampleComponentReference(value=samplecomponent_ref_json)
     samplecomponent = SampleComponent.load(samplecomponent_ref)
     sample = Sample.load(samplecomponent.sample)
     component = Component.load(samplecomponent.component)
-    denovo_assembly = samplecomponent.get_category("denovo_assembly")
-    if denovo_assembly is None:
-        denovo_assembly = Category(value={
-            "name": "denovo_assembly",
-            "component": {"id": samplecomponent["component"]["_id"], "name": samplecomponent["component"]["name"]},
-            "summary": {},
-            "report": {}
-        }
-        )
     contigs = samplecomponent.get_category("contigs")
     if contigs is None:
         contigs = Category(value={
@@ -49,9 +60,7 @@ def datadump(samplecomponent_ref_json: Dict):
         )
     save_contigs_location(contigs, samplecomponent["component"]["name"], samplecomponent["sample"]["name"])
     save_contigs(contigs, samplecomponent["component"]["name"], samplecomponent["sample"]["name"])
-    samplecomponent.set_category(denovo_assembly)
     samplecomponent.set_category(contigs)
-    sample.set_category(denovo_assembly)
     sample.set_category(contigs)
     samplecomponent.save_files()
     common.set_status_and_save(sample, samplecomponent, "Success")
