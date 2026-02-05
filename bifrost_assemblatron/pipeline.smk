@@ -78,44 +78,6 @@ rule check_requirements:
 
 #- Templated section: end --------------------------------------------------------------------------
 #* Dynamic section: start **************************************************************************
-rule_name = "setup__filter_reads_with_fastp"
-rule setup__filter_reads_with_fastp:
-    message:
-        f"Running step:{rule_name}"
-    log:
-        out_file = f"{component['name']}/log/{rule_name}.out.log",
-        err_file = f"{component['name']}/log/{rule_name}.err.log",
-    benchmark:
-        f"{component['name']}/benchmarks/{rule_name}.benchmark"
-    input:
-        rules.check_requirements.output.check_file,
-        reads = sample['categories']['paired_reads']['summary']['data']
-    output:
-        filtered_reads = [f"{sample['name']}.R1.trim.fastq.gz", f"{sample['name']}.R2.trim.fastq.gz"]
-    threads: 8
-    params:
-        options = "-q 30 -e 30 -l 30 -y 30"
-    shell:
-        "fastp --in1 {input.reads[0]} --in2 {input.reads[1]} --out1 {output.filtered_reads[0]} --out2 {output.filtered_reads[1]} --threads {threads} {params.options}"
-
-
-rule_name = "assembly__skesa"
-rule assembly__skesa:
-    # Static
-    message:
-        f"Running step:{rule_name}"
-    log:
-        out_file = f"{component['name']}/log/{rule_name}.out.log",
-        err_file = f"{component['name']}/log/{rule_name}.err.log",
-    benchmark:
-        f"{component['name']}/benchmarks/{rule_name}.benchmark"
-    # Dynamic
-    input:
-        filtered_reads = rules.setup__filter_reads_with_bbduk.output.filtered_reads,
-    output:
-        contigs = f"{component['name']}/contigs.fasta"
-    shell:
-        "skesa --use_paired_ends --fastq {input.filtered_reads} --contigs_out {output.contigs} 1> {log.out_file} 2> {log.err_file}"
 
 rule_name = "assembly__spades"
 rule assembly__spades:
@@ -130,8 +92,7 @@ rule assembly__spades:
     # Dynamic
     input:
         rules.check_requirements.output.check_file,
-        #reads = sample['categories']['paired_reads']['summary']['data']
-        filtered_reads = rules.setup__filter_reads_with_fastp.output.filtered_reads,
+        filtered_reads = sample['categories']['paired_reads']['summary']['trimmed']
     output:
         outputdir = Directory(f"{component['name']}/spades")
         scaffolds = f"{component['name']}/scaffolds.fasta"
@@ -184,19 +145,18 @@ rule assembly_qc:
         sample_name = sample['display_name'],
         cov_threshold = 10
         min_length = 500
-    shell: # i need to parse the dirname as well, to enure the output files are in the asseumed component[name] dir
-        """
         passed_prefix="$(dirname "{output.scaffolds}")/$(basename "{output.scaffolds}" .fasta)"
         failed_cov_prefix="$(dirname "{output.failed_cov_scaffolds}")/$(basename "{output.failed_cov_scaffolds}" .fasta)"
         failed_len_prefix="$(dirname "{output.failed_length_scaffolds}")/$(basename "{output.failed_length_scaffolds}" .fasta)"
-
+    shell: # i need to parse the dirname as well, to enure the output files are in the asseumed component[name] dir
+        """
         python rule__assembly_qc.py \
           --assembly "{input.scaffolds}" \
           --cov-threshold {params.cov_threshold} \
           --min-contig-len {params.min_length} \
-          --passed "$passed_prefix" \
-          --failed-length "$failed_len_prefix" \
-          --failed-coverage "$failed_cov_prefix" \
+          --passed {params.passed_prefix} \
+          --failed-length {params.failed_len_prefix} \
+          --failed-coverage {params.failed_cov_prefix} \
           --stdout \
           > "{log.out_file}" 2> "{log.err_file}"
         """

@@ -9,27 +9,11 @@ from typing import Dict
 import os
 
 
-# def extract_fastp_log(denovo_assembly: Category, results: Dict, component_name: str) -> None:
-#     file_name = "log/setup__filter_reads_with_fastp.err.log"
-#     file_key = common.json_key_cleaner(file_name)
-#     file_path = os.path.join(component_name, file_name)
-#     reads_in = common.get_group_from_file("Input:\s*([0-9]+) reads", file_path)
-#     reads_in = int(reads_in) if reads_in != None else 0
-#     reads_removed = common.get_group_from_file("Total Removed:\s*([0-9]+) reads", file_path)
-#     reads_removed = int(reads_removed) if reads_removed != None else 0
-#     denovo_assembly["summary"]["number_of_reads"] = reads_in
-#     denovo_assembly["summary"]["number_of_filtered_reads"] = reads_in - reads_removed 
-
 def save_contigs_location(contigs: Category, component_name: str, sample_name: str) -> None:
-    file_name = f"{sample_name}.fasta"
+    file_name = f"{sample_name}_trimmed.fasta"
     file_path = os.path.join(os.getcwd(), component_name, file_name)
     contigs["summary"]["data"] = file_path
 
-def save_trimmed_reads_location(paired_reads: Category, component_name: str, sample_name: str) -> None:
-
-    file_paths = [os.path.join(os.getcwd, f"{sample_name}.R1.trim.fastq.gz"),
-                  os.path.join(os.getcwd, f"{sample_name}.R2.trim.fastq.gz")]
-    paired_reads["summary"]["trimmed"] = file_paths
 
 def save_contigs(contigs: Category, component_name: str, sample_name: str) -> None:
     file_path = contigs["summary"]["data"]
@@ -63,22 +47,11 @@ def datadump(samplecomponent_ref_json: Dict):
             "report": {}
         }
         )
-    paired_reads = samplecomponent.get_category("paired_reads")
-    if paired_reads is None:
-        paired_reads = Category(value={
-            "name": "paired_reads",
-            "component": {"id": samplecomponent["component"]["_id"], "name": samplecomponent["component"]["name"]},
-            "summary": {},
-            "report": {}
-        })
-    save_trimmed_reads_location(paired_reads, samplecomponent)
     # extract_fastp_log(denovo_assembly, samplecomponent["results"], samplecomponent["component"]["name"])
     save_contigs_location(contigs, samplecomponent["component"]["name"], samplecomponent["sample"]["name"])
     save_contigs(contigs, samplecomponent["component"]["name"], samplecomponent["sample"]["name"])
-    samplecomponent.set_category(paired_reads)
     samplecomponent.set_category(denovo_assembly)
     samplecomponent.set_category(contigs)
-    sample.set_category(paired_reads)
     sample.set_category(denovo_assembly)
     sample.set_category(contigs)
     samplecomponent.save_files()
