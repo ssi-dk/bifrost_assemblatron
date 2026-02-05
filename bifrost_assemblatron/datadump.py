@@ -47,7 +47,6 @@ def datadump(samplecomponent_ref_json: Dict):
             "report": {}
         }
         )
-    # extract_fastp_log(denovo_assembly, samplecomponent["results"], samplecomponent["component"]["name"])
     save_contigs_location(contigs, samplecomponent["component"]["name"], samplecomponent["sample"]["name"])
     save_contigs(contigs, samplecomponent["component"]["name"], samplecomponent["sample"]["name"])
     samplecomponent.set_category(denovo_assembly)
