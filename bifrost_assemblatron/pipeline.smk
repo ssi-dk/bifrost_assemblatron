@@ -145,10 +145,10 @@ rule assembly_qc:
         sample_name = sample['display_name'],
         cov_threshold = 10
         min_length = 500
-        passed_prefix="$(dirname "{output.scaffolds}")/$(basename "{output.scaffolds}" .fasta)"
-        failed_cov_prefix="$(dirname "{output.failed_cov_scaffolds}")/$(basename "{output.failed_cov_scaffolds}" .fasta)"
-        failed_len_prefix="$(dirname "{output.failed_length_scaffolds}")/$(basename "{output.failed_length_scaffolds}" .fasta)"
-    shell: # i need to parse the dirname as well, to enure the output files are in the asseumed component[name] dir
+        passed_prefix=f"{component['name']}/{sample['name']}_trimmed"
+        failed_cov_prefix=f"{component['name']}/{sample['name']}_cov_fail"
+        failed_len_prefix=f"{component['name']}/{sample['name']}_length_fail"
+    shell:
         """
         python rule__assembly_qc.py \
           --assembly "{input.scaffolds}" \
