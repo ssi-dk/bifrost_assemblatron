@@ -1,16 +1,29 @@
 # bifrost_assemblatron
 
-This component is run given a sample id already added into the bifrostDB. From this it'll pull the paired_reads and contigs and remap the raw reads to the assembly. From the resulting files various QC metrics will be captured.
+The input data to this initial component will already be adapter - and quality trimmed data after "min_read_check", so this component when given a sample id and requirements checks will perform de novo assembly and a quality control step calculating various assembly metrics. 
 
-## Programs: (see Dockerfile) 
+## de novo Assembly (see pipeline.smk)
+quality trimmed reads are stored within sample['categories']['paired_reads']['summary']['trimmed'] - so indexing is required to access then as done in the pipeline. With a basic spades command as such
 ```
-snakemake-minimal==5.31.1;
-bbmap==38.58;
-skesa==2.4.0;
+spades -1 trimmed_read1.fastq.gz -2 trimmed_read1.fastq.gz --threads xx --isolate -o outputdirectory
 ```
 
-## Summary of c run: (see pipeline.smk and config.yaml)
+As described in the documentation (https://ablab.github.io/spades/running.html) the "--isolate" is an assembly running mode: "This flag is highly recommended for high-coverage isolate and multi-cell Illumina data; improves the assembly quality and running time"
+
+## rule assembly_qc
+Takes the created de-novo assembly and filters the fasta files and calculates basic metrics for all of the split data files for future QC steps. The filtering steps follows:
+1. Removes all contigs below length of 500 stored in (option --min-contig-len & --failed-length)
+2. Removes all the contigs with a coverage below 10x (extracted from the spades header, option --cov-threshold & --failed-coverage)
+3. Stores the passed files as the final filtered assembly files used for future components (--passed)
+
+The command takes prefixes for the filtered files to generate both the filtered fasta files and statistical measurements
 ```
-java -ea -cp /opt/conda/opt/bbmap-38.58-0/current/ jgi.BBDuk in={input.reads[0]} in2={input.reads[1]} out={output.filtered_reads} ref={params.adapters} ktrim=r k=23 mink=11 hdist=1 tbo qtrim=r minlength=30 1> {log.out_file} 2> {log.err_file}
-skesa --use_paired_ends --fastq {input.filtered_reads} --contigs_out {output.contigs} 1> {log.out_file} 2> {log.err_file}
+python rule__assembly_qc.py --assembly generated_de_novo_assembly.fasta --cov-threshold 10 --min-contig-len 500 --passed passed_file_prefix --failed-length filtered_on_length_prefix --failed-coverage filtered_on_coverage_prefix
 ```
+
+# Rerun this sole component as a module for dev/test
+```
+snakemake --nolock --cores all xxx
+```
+
+

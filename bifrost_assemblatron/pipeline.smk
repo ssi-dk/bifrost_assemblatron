@@ -98,7 +98,7 @@ rule assembly__spades:
         scaffolds = f"{component['name']}/scaffolds.fasta"
     threads: 8
     shell:
-        "spades -1 {input.filtered_reads[0]} -2 {input.filtered_reads[1]} --threads {threads} --isolate -o {output.contigs} 1> {log.out_file} 2> {log.err_file} && cp {output.outputdir}/scaffolds.fasta {output.scaffolds}"
+        "spades -1 {input.filtered_reads[0]} -2 {input.filtered_reads[1]} --threads {threads} --isolate -o {output.outputdir} 1> {log.out_file} 2> {log.err_file} && cp {output.outputdir}/scaffolds.fasta {output.scaffolds}"
 
 
 rule_name = "rename_scaffolds"
