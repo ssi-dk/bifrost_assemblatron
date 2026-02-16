@@ -11,6 +11,7 @@ from bifrostlib.datahandling import Component
 from bifrostlib.datahandling import SampleComponentReference
 from bifrostlib.datahandling import SampleComponent
 from snakemake.io import directory
+import datetime
 
 os.umask(0o2)
 
@@ -116,13 +117,14 @@ rule assembly__spades:
         outputdir = directory(f"{component['name']}/spades"),
         scaffolds = f"{component['name']}/scaffolds.fasta",
         threads_file = temp(f"{component['name']}/threads_used.txt")
-    threads: 20
+    params:
+        threads = 10
     shell: r"""
-        spades.py -1 {input.filtered_reads[0]} -2 {input.filtered_reads[1]} -t 20 --isolate -o {output.outputdir} 1> {log.out_file} 2> {log.err_file}
+        spades.py -1 {input.filtered_reads[0]} -2 {input.filtered_reads[1]} -t {params.threads} --isolate -o {output.outputdir} 1> {log.out_file} 2> {log.err_file}
 
         cp {output.outputdir}/scaffolds.fasta {output.scaffolds}
 
-        echo {threads} > {output.threads_file}
+        echo {params.threads} > {output.threads_file}
         """
 
 rule_name = "rename_scaffolds"
@@ -221,12 +223,16 @@ rule compute_runtime:
         print(f"runtime in minutes {runtime_minutes}")
 
         sc = SampleComponent.load(samplecomponent.to_reference())
+        sc["time_start"] = datetime.datetime.fromtimestamp(t_start).strftime("%Y-%m-%d %H:%M:%S")
+        sc["time_end"] = datetime.datetime.fromtimestamp(t_end).strftime("%Y-%m-%d %H:%M:%S")
         sc["time_running"] = round(runtime_minutes, 3)
-        sc["threads_used"] = int(threads_used)
+        sc["threads_used"] = threads_used
+
         sc.save()
 
         with open(output.runtime_flag, "w") as fh:
             fh.write("done")
+
 
 # -------------------------------------------------------------------------
 # DATADUMP
@@ -238,7 +244,7 @@ rule datadump:
         f"Running step:{rule_name}"
     log:
         out_file = f"{component['name']}/log/{rule_name}.out.log",
-        err_file = f"{component['name']}/log/{rule_name}.err.log",
+        err_file = f"{component['name']}/log/{rule_name}.err.log"
     benchmark:
         f"{component['name']}/benchmarks/{rule_name}.benchmark"
     input:
