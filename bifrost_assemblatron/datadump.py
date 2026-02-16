@@ -25,25 +25,25 @@ def save_contigs(contigs: Category, component_name: str, sample_name: str) -> No
         contigs["summary"]["file_id"] = file_id
 
 def extract_assembly_statistics(contigs: Category, component_name: str, sample_name: str) -> None:
-    file_name = f"{sample_name}_trimmed_stat.tsv"
-    with open(file_name) as fh:
-        header = fh.next()
-        (group, cov_threshold, min_contig_len, contigs, sum_len, N50, avg_cov) = fh.readline().strip().split()
-        contigs["summary"]["contigs"] = contigs
-        contigs["summary"]["sum_len"] = sum_len
-        contigs["summary"]["N50"] = N50
-        contigs["summary"]["avg_cov"] = avg_cov
-    file_name = f"{sample_name}_cov_fail_stat.tsv"
-    with open(file_name) as fh:
-        header = fh.next()
-        (group, cov_threshold, min_contig_len, contigs, sum_len, N50, avg_cov) = fh.readline().strip().split()
-        contigs["summary"]["low_cov_len"] = sum_len
-        contigs["summary"]["low_cov_N50"] = N50
-        contigs["summary"]["low_cov_contigs"] = contigs
-        contigs["summary"]["low_cov_avg_cov"] = avg_cov
-    
-        
+    # Passed contigs
+    file_path = os.path.join(component_name, f"{sample_name}_trimmed_stat.tsv")
+    with open(file_path) as fh:
+        header = next(fh)
+        (group, cov_threshold, min_contig_len, contig_count, sum_len, N50, avg_cov) = fh.readline().strip().split()
+        contigs["summary"]["contigs"] = int(contig_count)
+        contigs["summary"]["sum_len"] = int(sum_len)
+        contigs["summary"]["N50"] = int(N50)
+        contigs["summary"]["avg_cov"] = float(avg_cov)
 
+    # Low coverage contigs
+    file_path = os.path.join(component_name, f"{sample_name}_cov_fail_stat.tsv")
+    with open(file_path) as fh:
+        header = next(fh)
+        (group, cov_threshold, min_contig_len, contig_count, sum_len, N50, avg_cov) = fh.readline().strip().split()
+        contigs["summary"]["low_cov_len"] = int(sum_len)
+        contigs["summary"]["low_cov_N50"] = int(N50)
+        contigs["summary"]["low_cov_contigs"] = int(contig_count)
+        contigs["summary"]["low_cov_avg_cov"] = float(avg_cov)   
 
 def datadump(samplecomponent_ref_json: Dict):
     samplecomponent_ref = SampleComponentReference(value=samplecomponent_ref_json)
@@ -60,6 +60,7 @@ def datadump(samplecomponent_ref_json: Dict):
         }
         )
     save_contigs_location(contigs, samplecomponent["component"]["name"], samplecomponent["sample"]["name"])
+    extract_assembly_statistics(contigs, samplecomponent["component"]["name"], samplecomponent["sample"]["name"])
     save_contigs(contigs, samplecomponent["component"]["name"], samplecomponent["sample"]["name"])
     samplecomponent.set_category(contigs)
     sample.set_category(contigs)
