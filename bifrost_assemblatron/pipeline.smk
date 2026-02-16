@@ -116,7 +116,8 @@ rule assembly__spades:
     output:
         outputdir = directory(f"{component['name']}/spades"),
         scaffolds = f"{component['name']}/scaffolds.fasta",
-        threads_file = temp(f"{component['name']}/threads_used.txt")
+        threads_file = temp(f"{component['name']}/threads_used.txt"),
+        tool_version = temp(f"{component['name']}/tool_version.txt")
     params:
         threads = 10
     shell: r"""
@@ -125,6 +126,8 @@ rule assembly__spades:
         cp {output.outputdir}/scaffolds.fasta {output.scaffolds}
 
         echo {params.threads} > {output.threads_file}
+
+        spades.py -v > {output.tool_version}	
         """
 
 rule_name = "rename_scaffolds"
@@ -201,11 +204,12 @@ rule set_time_end:
         with open(output.end_file, "w") as fh:
             fh.write(str(time.time()))
 
-rule compute_runtime:
+rule dump_info:
     input:
         start_file = rules.set_time_start.output.start_file,
         end_file = rules.set_time_end.output.end_file,
-        threads_file = rules.assembly__spades.output.threads_file
+        threads_file = rules.assembly__spades.output.threads_file,
+        spades_version = rules.assembly__spades.output.tool_version
     output:
         runtime_flag = temp(f"{component['name']}/runtime_set")
     run:
@@ -218,6 +222,8 @@ rule compute_runtime:
             t_end = float(fh.read().strip())
         with open(input.threads_file) as fh:
             threads_used = int(fh.read().strip())
+        with open(input.spades_version) as fh:
+            spades_version = str(fh.read())
 
         runtime_minutes = (t_end - t_start) / 60.0
         print(f"runtime in minutes {runtime_minutes}")
@@ -227,6 +233,7 @@ rule compute_runtime:
         sc["time_end"] = datetime.datetime.fromtimestamp(t_end).strftime("%Y-%m-%d %H:%M:%S")
         sc["time_running"] = round(runtime_minutes, 3)
         sc["threads_used"] = threads_used
+        sc["tool_version"] = spades_version
 
         sc.save()
 
@@ -249,7 +256,7 @@ rule datadump:
         f"{component['name']}/benchmarks/{rule_name}.benchmark"
     input:
         rules.assembly_qc.output.scaffolds,
-        rules.compute_runtime.output.runtime_flag
+        rules.dump_info.output.runtime_flag
     output:
         complete = f"{component['name']}/datadump_complete"
     params:
