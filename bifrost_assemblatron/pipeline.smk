@@ -64,7 +64,7 @@ rule all:
 
 rule set_time_start:
     output:
-        start_file = temp(f"{component['name']}/time_start.txt")
+        start_file = f"{component['name']}/time_start.txt"
     run:
         import time
         with open(output.start_file, "w") as fh:
@@ -74,7 +74,7 @@ rule setup:
     input:
         rules.set_time_start.output.start_file
     output:
-        init_file = touch(temp(f"{component['name']}/initialized"))
+        init_file = touch(f"{component['name']}/initialized")
     run:
         samplecomponent["path"] = os.path.join(os.getcwd(), component["name"])
         samplecomponent.save()
@@ -91,14 +91,12 @@ rule check_requirements:
     input:
         folder = rules.setup.output.init_file
     output:
-        check_file = f"{component['name']}/requirements_met"
-    params:
-        samplecomponent
+        check_file = touch(f"{component['name']}/requirements_met")
     run:
         if samplecomponent.has_requirements():
-            with open(output.check_file, "w") as fh:
-                fh.write("")
-
+            #No need to write anything as the output is using touch to create the flag used to check the requirements
+            pass
+	    
 #* Dynamic section: start **************************************************************************
 
 rule_name = "assembly__spades"
@@ -116,10 +114,10 @@ rule assembly__spades:
     output:
         outputdir = directory(f"{component['name']}/spades"),
         scaffolds = f"{component['name']}/scaffolds.fasta",
-        threads_file = temp(f"{component['name']}/threads_used.txt"),
-        tool_version = temp(f"{component['name']}/tool_version.txt")
+        threads_file = f"{component['name']}/threads_used.txt",
+        tool_version = f"{component['name']}/tool_version.txt"
     params:
-        threads = 10
+        threads = 20
     shell: r"""
         spades.py -1 {input.filtered_reads[0]} -2 {input.filtered_reads[1]} -t {params.threads} --isolate -o {output.outputdir} 1> {log.out_file} 2> {log.err_file}
 
@@ -127,7 +125,7 @@ rule assembly__spades:
 
         echo {params.threads} > {output.threads_file}
 
-        spades.py -v > {output.tool_version}	
+        spades.py -v > {output.tool_version} 2>&1
         """
 
 rule_name = "rename_scaffolds"
@@ -198,20 +196,55 @@ rule set_time_end:
     input:
         rules.assembly_qc.output.scaffolds
     output:
-        end_file = temp(f"{component['name']}/time_end.txt")
+        end_file = f"{component['name']}/time_end.txt"
     run:
         import time
         with open(output.end_file, "w") as fh:
             fh.write(str(time.time()))
+
+rule_name = "git_version"
+rule git_version:
+    message:
+        f"Running step:{rule_name}"
+    log:
+        out_file = f"{component['name']}/log/{rule_name}.out.log",
+        err_file = f"{component['name']}/log/{rule_name}.err.log",
+    benchmark:
+        f"{component['name']}/benchmarks/{rule_name}.benchmark"
+    input:
+        rules.setup.output.init_file
+    output:
+        git_hash = f"{component['name']}/git_hash.txt"
+    run:
+        import subprocess, os
+
+        snake_dir = os.path.dirname(workflow.snakefile)
+
+        # Best effort: get commit hash; if not a git repo, write "-"
+        try:
+            git_hash = subprocess.check_output(
+                ["git", "-C", snake_dir, "rev-parse", "HEAD"],
+                stderr=subprocess.STDOUT,
+                text=True
+            ).strip()
+        except Exception as e:
+            git_hash = "-"
+            os.makedirs(os.path.dirname(log.err_file), exist_ok=True)
+            with open(log.err_file, "a") as fh:
+                fh.write(f"[git_version] Could not determine git hash from {snake_dir}: {e}\n")
+
+        with open(output.git_hash, "w") as fh:
+            fh.write(str(git_hash))
 
 rule dump_info:
     input:
         start_file = rules.set_time_start.output.start_file,
         end_file = rules.set_time_end.output.end_file,
         threads_file = rules.assembly__spades.output.threads_file,
-        spades_version = rules.assembly__spades.output.tool_version
+        spades_version = rules.assembly__spades.output.tool_version,
+        git_hash = rules.git_version.output.git_hash
     output:
-        runtime_flag = temp(f"{component['name']}/runtime_set")
+        runtime_flag = touch(f"{component['name']}/runtime_set")
     run:
         import time
         from bifrostlib.datahandling import SampleComponent
@@ -223,8 +256,10 @@ rule dump_info:
         with open(input.threads_file) as fh:
             threads_used = int(fh.read().strip())
         with open(input.spades_version) as fh:
-            spades_version = str(fh.read())
-
+            spades_version = str(fh.read().rstrip("\n"))
+        with open(input.git_hash) as fh:
+            git_hash = str(fh.read().strip())
+	
         runtime_minutes = (t_end - t_start) / 60.0
         print(f"runtime in minutes {runtime_minutes}")
 
@@ -234,12 +269,9 @@ rule dump_info:
         sc["time_running"] = round(runtime_minutes, 3)
         sc["threads_used"] = threads_used
         sc["tool_version"] = spades_version
-
+        sc["git_hash"] = git_hash
+	
         sc.save()
-
-        with open(output.runtime_flag, "w") as fh:
-            fh.write("done")
-
 
 # -------------------------------------------------------------------------
 # DATADUMP
@@ -260,7 +292,7 @@ rule datadump:
     output:
         complete = f"{component['name']}/datadump_complete"
     params:
-        samplecomponent_ref_json = samplecomponent.to_reference().json
+        samplecomponent_id = samplecomponent["_id"]
     script:
         os.path.join(os.path.dirname(workflow.snakefile), "datadump.py")
 

@@ -45,8 +45,9 @@ def extract_assembly_statistics(contigs: Category, component_name: str, sample_n
         contigs["summary"]["low_cov_contigs"] = int(contig_count)
         contigs["summary"]["low_cov_avg_cov"] = float(avg_cov)   
 
-def datadump(samplecomponent_ref_json: Dict):
-    samplecomponent_ref = SampleComponentReference(value=samplecomponent_ref_json)
+def datadump(samplecomponent_id: str):
+    #samplecomponent_ref = SampleComponentReference(value=samplecomponent_ref_json)
+    samplecomponent_ref = SampleComponentReference(_id=samplecomponent_id)
     samplecomponent = SampleComponent.load(samplecomponent_ref)
     sample = Sample.load(samplecomponent.sample)
     component = Component.load(samplecomponent.component)
@@ -71,5 +72,5 @@ def datadump(samplecomponent_ref_json: Dict):
 
 
 datadump(
-    snakemake.params.samplecomponent_ref_json,
+    snakemake.params.samplecomponent_id
 )
