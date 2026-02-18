@@ -25,26 +25,36 @@ def save_contigs(contigs: Category, component_name: str, sample_name: str) -> No
         contigs["summary"]["file_id"] = file_id
 
 def extract_assembly_statistics(contigs: Category, component_name: str, sample_name: str) -> None:
-    # Passed contigs
-    file_path = os.path.join(component_name, f"{sample_name}_trimmed_stat.tsv")
+    # Passed contigs 10x< and 500bp<
+    file_path = os.path.join(component_name, f"{sample_name}_above10x_stat.tsv")
     with open(file_path) as fh:
         header = next(fh)
         (group, cov_threshold, min_contig_len, contig_count, sum_len, N50, avg_cov) = fh.readline().strip().split()
-        contigs["summary"]["contigs"] = int(contig_count)
-        contigs["summary"]["sum_len"] = int(sum_len)
-        contigs["summary"]["N50"] = int(N50)
-        contigs["summary"]["avg_cov"] = float(avg_cov)
+        contigs["summary"]["contigs_10x"] = int(contig_count)
+        contigs["summary"]["length_10x"] = int(sum_len)
+        contigs["summary"]["N50_10x"] = int(N50)
+        contigs["summary"]["coverage_10x"] = float(avg_cov)
 
-    # Low coverage contigs
-    file_path = os.path.join(component_name, f"{sample_name}_cov_fail_stat.tsv")
+    # low coverage 1x<10x and 500bp
+    file_path = os.path.join(component_name, f"{sample_name}_above1x_stat.tsv")
     with open(file_path) as fh:
         header = next(fh)
         (group, cov_threshold, min_contig_len, contig_count, sum_len, N50, avg_cov) = fh.readline().strip().split()
-        contigs["summary"]["low_cov_len"] = int(sum_len)
-        contigs["summary"]["low_cov_N50"] = int(N50)
-        contigs["summary"]["low_cov_contigs"] = int(contig_count)
-        contigs["summary"]["low_cov_avg_cov"] = float(avg_cov)   
+        contigs["summary"]["contigs_1x"] = int(contig_count)
+        contigs["summary"]["length_1x"] = int(sum_len)
+        contigs["summary"]["N50_1x"] = int(N50)
+        contigs["summary"]["coverage_1x"] = float(avg_cov)
 
+    # Low coverage contigs <1x
+    file_path = os.path.join(component_name, f"{sample_name}_below1x_stat.tsv")
+    with open(file_path) as fh:
+        header = next(fh)
+        (group, cov_threshold, min_contig_len, contig_count, sum_len, N50, avg_cov) = fh.readline().strip().split()
+        contigs["summary"]["contigs_0x"] = int(contig_count)
+        contigs["summary"]["length_0x"] = int(sum_len)
+        contigs["summary"]["N50_0x"] = int(N50)
+        contigs["summary"]["coverage_0x"] = float(avg_cov)   
+    
 def datadump(samplecomponent_id: str):
     #samplecomponent_ref = SampleComponentReference(value=samplecomponent_ref_json)
     samplecomponent_ref = SampleComponentReference(_id=samplecomponent_id)

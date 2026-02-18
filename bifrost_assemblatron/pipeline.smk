@@ -158,19 +158,22 @@ rule assembly_qc:
     input:
         scaffolds = rules.rename_scaffolds.output.scaffolds_out
     output:
-        scaffolds = f"{component['name']}/{sample['name']}_trimmed.fasta",
-        statistics = f"{component['name']}/{sample['name']}_trimmed_stat.tsv",
-        failed_cov_scaffolds = f"{component['name']}/{sample['name']}_cov_fail.fasta",
-        failed_cov_statistics = f"{component['name']}/{sample['name']}_cov_fail_stat.tsv",
-        failed_length_scaffolds = f"{component['name']}/{sample['name']}_length_fail.fasta",
-        failed_length_statistics = f"{component['name']}/{sample['name']}_length_fail_stat.tsv",
+        scaffolds = f"{component['name']}/{sample['name']}_above10x.fasta",
+        statistics = f"{component['name']}/{sample['name']}_above10x_stat.tsv",
+        failed_cov_scaffolds = f"{component['name']}/{sample['name']}_below1x.fasta",
+        failed_cov_statistics = f"{component['name']}/{sample['name']}_below1x_stat.tsv",
+	low_cov_scaffolds = f"{component['name']}/{sample['name']}_above1x.fasta",
+	low_cov_statistics = f"{component['name']}/{sample['name']}_above1x_stat.tsv",
+        failed_length_scaffolds = f"{component['name']}/{sample['name']}_below500bp.fasta",
+        failed_length_statistics = f"{component['name']}/{sample['name']}_below500bp_stat.tsv",
     params:
         sample_name = sample["display_name"],
         cov_threshold = 10,
         min_length = 500,
-        passed_prefix = f"{component['name']}/{sample['name']}_trimmed",
-        failed_cov_prefix = f"{component['name']}/{sample['name']}_cov_fail",
-        failed_len_prefix = f"{component['name']}/{sample['name']}_length_fail",
+        passed_prefix = f"{component['name']}/{sample['name']}_above10x",
+        failed_cov_prefix = f"{component['name']}/{sample['name']}_below1x",
+	low_cov_prefix = f"{component['name']}/{sample['name']}_above1x",
+        failed_len_prefix = f"{component['name']}/{sample['name']}_below500bp",
         qc_script = os.path.join(os.path.dirname(workflow.snakefile), "rule__assembly_qc.py")
     shell:
         r"""
@@ -179,6 +182,7 @@ rule assembly_qc:
           --cov-threshold {params.cov_threshold} \
           --min-contig-len {params.min_length} \
           --passed {params.passed_prefix} \
+          --low-cov-above-1x {params.low_cov_prefix} \
           --failed-length {params.failed_len_prefix} \
           --failed-coverage {params.failed_cov_prefix} \
           --stdout \
