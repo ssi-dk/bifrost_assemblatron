@@ -10,7 +10,7 @@ import os
 
 
 def save_contigs_location(contigs: Category, component_name: str, sample_name: str) -> None:
-    file_name = f"{sample_name}_trimmed.fasta"
+    file_name = f"{sample_name}_above10x.fasta"
     file_path = os.path.join(os.getcwd(), component_name, file_name)
     contigs["summary"]["data"] = file_path
     contigs["summary"]["type"] = "assembly"
