@@ -4,40 +4,63 @@ from bifrostlib.datahandling import Component
 from bifrostlib.datahandling import SampleComponentReference
 from bifrostlib.datahandling import SampleComponent
 from bifrostlib.datahandling import Category
+from bifrostlib.database_interface import save_file
 from typing import Dict
 import os
 
 
-def extract_bbuk_log(denovo_assembly: Category, results: Dict, component_name: str) -> None:
-    file_name = "log/setup__filter_reads_with_bbduk.err.log"
-    file_key = common.json_key_cleaner(file_name)
-    file_path = os.path.join(component_name, file_name)
-    reads_in = common.get_group_from_file("Input:\s*([0-9]+) reads", file_path)
-    reads_in = int(reads_in) if reads_in != None else 0
-    reads_removed = common.get_group_from_file("Total Removed:\s*([0-9]+) reads", file_path)
-    reads_removed = int(reads_removed) if reads_removed != None else 0
-    denovo_assembly["summary"]["number_of_reads"] = reads_in
-    denovo_assembly["summary"]["number_of_filtered_reads"] = reads_in - reads_removed 
-
-def save_contigs_locations(contigs: Category, results: Dict, component_name: str, sample_name: str) -> None:
-    file_name = f"{sample_name}.fasta"
+def save_contigs_location(contigs: Category, component_name: str, sample_name: str) -> None:
+    file_name = f"{sample_name}_above10x.fasta"
     file_path = os.path.join(os.getcwd(), component_name, file_name)
     contigs["summary"]["data"] = file_path
+    contigs["summary"]["type"] = "assembly"
 
-def datadump(samplecomponent_ref_json: Dict):
-    samplecomponent_ref = SampleComponentReference(value=samplecomponent_ref_json)
+
+def save_contigs(contigs: Category, component_name: str, sample_name: str) -> None:
+    file_path = contigs["summary"]["data"]
+    _id = None
+    _type = None
+    file_id = save_file(_id, sample_name, _type, file_path)
+    if file_id is not None:
+        contigs["summary"]["file_id"] = file_id
+
+def extract_assembly_statistics(contigs: Category, component_name: str, sample_name: str) -> None:
+    # Passed contigs 10x< and 500bp<
+    file_path = os.path.join(component_name, f"{sample_name}_above10x_stat.tsv")
+    with open(file_path) as fh:
+        header = next(fh)
+        (group, cov_threshold, min_contig_len, contig_count, sum_len, N50, avg_cov) = fh.readline().strip().split()
+        contigs["summary"]["contigs_10x"] = int(contig_count)
+        contigs["summary"]["length_10x"] = int(sum_len)
+        contigs["summary"]["N50_10x"] = int(N50)
+        contigs["summary"]["coverage_10x"] = float(avg_cov)
+
+    # low coverage 1x<10x and 500bp
+    file_path = os.path.join(component_name, f"{sample_name}_above1x_stat.tsv")
+    with open(file_path) as fh:
+        header = next(fh)
+        (group, cov_threshold, min_contig_len, contig_count, sum_len, N50, avg_cov) = fh.readline().strip().split()
+        contigs["summary"]["contigs_1x"] = int(contig_count)
+        contigs["summary"]["length_1x"] = int(sum_len)
+        contigs["summary"]["N50_1x"] = int(N50)
+        contigs["summary"]["coverage_1x"] = float(avg_cov)
+
+    # Low coverage contigs <1x
+    file_path = os.path.join(component_name, f"{sample_name}_below1x_stat.tsv")
+    with open(file_path) as fh:
+        header = next(fh)
+        (group, cov_threshold, min_contig_len, contig_count, sum_len, N50, avg_cov) = fh.readline().strip().split()
+        contigs["summary"]["contigs_0x"] = int(contig_count)
+        contigs["summary"]["length_0x"] = int(sum_len)
+        contigs["summary"]["N50_0x"] = int(N50)
+        contigs["summary"]["coverage_0x"] = float(avg_cov)   
+    
+def datadump(samplecomponent_id: str):
+    #samplecomponent_ref = SampleComponentReference(value=samplecomponent_ref_json)
+    samplecomponent_ref = SampleComponentReference(_id=samplecomponent_id)
     samplecomponent = SampleComponent.load(samplecomponent_ref)
     sample = Sample.load(samplecomponent.sample)
     component = Component.load(samplecomponent.component)
-    denovo_assembly = samplecomponent.get_category("denovo_assembly")
-    if denovo_assembly is None:
-        denovo_assembly = Category(value={
-            "name": "denovo_assembly",
-            "component": {"id": samplecomponent["component"]["_id"], "name": samplecomponent["component"]["name"]},
-            "summary": {},
-            "report": {}
-        }
-        )
     contigs = samplecomponent.get_category("contigs")
     if contigs is None:
         contigs = Category(value={
@@ -47,11 +70,10 @@ def datadump(samplecomponent_ref_json: Dict):
             "report": {}
         }
         )
-    extract_bbuk_log(denovo_assembly, samplecomponent["results"], samplecomponent["component"]["name"])
-    save_contigs_locations(contigs, samplecomponent["results"], samplecomponent["component"]["name"], samplecomponent["sample"]["name"])
-    samplecomponent.set_category(denovo_assembly)
+    save_contigs_location(contigs, samplecomponent["component"]["name"], samplecomponent["sample"]["name"])
+    extract_assembly_statistics(contigs, samplecomponent["component"]["name"], samplecomponent["sample"]["name"])
+    save_contigs(contigs, samplecomponent["component"]["name"], samplecomponent["sample"]["name"])
     samplecomponent.set_category(contigs)
-    sample.set_category(denovo_assembly)
     sample.set_category(contigs)
     samplecomponent.save_files()
     common.set_status_and_save(sample, samplecomponent, "Success")
@@ -60,5 +82,5 @@ def datadump(samplecomponent_ref_json: Dict):
 
 
 datadump(
-    snakemake.params.samplecomponent_ref_json,
+    snakemake.params.samplecomponent_id
 )
