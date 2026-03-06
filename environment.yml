@@ -3,12 +3,13 @@ channels:
   - bioconda
   - conda-forge
 dependencies:
-  - snakemake-minimal==5.31.1
-  - spades
+  - snakemake-minimal
+  - spades>=4.2.0
+  - python>=3.13
   - pip
   - pip:
     - jsonschema>=4.18.0a1
-    - numpy==1.21.5
+    - numpy>=1.21.5
     - pytest
     - pytest-cov
     - pytest-profiling
@@ -16,5 +17,5 @@ dependencies:
     - pyyaml
     - argh
     - watchdog
-    - bifrostlib
+    - bifrostlib>=2.1.20
     - -e .

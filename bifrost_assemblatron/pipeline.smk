@@ -50,7 +50,10 @@ onerror:
 
 envvars:
     "BIFROST_INSTALL_DIR",
-    "CONDA_PREFIX"
+    "CONDA_PREFIX",
+    "BIFROST_CPUS_BIG",
+
+JOB_CPUS = int(os.environ.get("BIFROST_CPUS_BIG", 1))
 
 # -------------------------------------------------------------------------
 # MAIN + TIMING
@@ -117,7 +120,7 @@ rule assembly__spades:
         threads_file = f"{component['name']}/threads_used.txt",
         tool_version = f"{component['name']}/tool_version.txt"
     params:
-        threads = 20
+        threads = JOB_CPUS
     shell: r"""
         spades.py -1 {input.filtered_reads[0]} -2 {input.filtered_reads[1]} -t {params.threads} --isolate -o {output.outputdir} 1> {log.out_file} 2> {log.err_file}
 
@@ -162,8 +165,8 @@ rule assembly_qc:
         statistics = f"{component['name']}/{sample['name']}_above10x_stat.tsv",
         failed_cov_scaffolds = f"{component['name']}/{sample['name']}_below1x.fasta",
         failed_cov_statistics = f"{component['name']}/{sample['name']}_below1x_stat.tsv",
-	low_cov_scaffolds = f"{component['name']}/{sample['name']}_above1x.fasta",
-	low_cov_statistics = f"{component['name']}/{sample['name']}_above1x_stat.tsv",
+        low_cov_scaffolds = f"{component['name']}/{sample['name']}_above1x.fasta",
+        low_cov_statistics = f"{component['name']}/{sample['name']}_above1x_stat.tsv",
         failed_length_scaffolds = f"{component['name']}/{sample['name']}_below500bp.fasta",
         failed_length_statistics = f"{component['name']}/{sample['name']}_below500bp_stat.tsv",
     params:
@@ -172,7 +175,7 @@ rule assembly_qc:
         min_length = 500,
         passed_prefix = f"{component['name']}/{sample['name']}_above10x",
         failed_cov_prefix = f"{component['name']}/{sample['name']}_below1x",
-	low_cov_prefix = f"{component['name']}/{sample['name']}_above1x",
+        low_cov_prefix = f"{component['name']}/{sample['name']}_above1x",
         failed_len_prefix = f"{component['name']}/{sample['name']}_below500bp",
         qc_script = os.path.join(os.path.dirname(workflow.snakefile), "rule__assembly_qc.py")
     shell:
