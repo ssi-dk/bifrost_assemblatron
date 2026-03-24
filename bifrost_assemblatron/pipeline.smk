@@ -2,6 +2,7 @@
 import os
 import sys
 import traceback
+import subprocess
 
 from bifrostlib import common
 from bifrostlib.datahandling import SampleReference
@@ -54,6 +55,20 @@ envvars:
     "BIFROST_CPUS_BIG",
 
 JOB_CPUS = int(os.environ.get("BIFROST_CPUS_BIG", 1))
+
+# -------------------------------------------------------------------------
+# GIT HASH - VERSION CONTROL
+# -------------------------------------------------------------------------
+
+def find_git_root(start_dir):
+    cur = os.path.abspath(start_dir)
+    while True:
+        if os.path.isdir(os.path.join(cur, ".git")):
+            return cur
+        parent = os.path.dirname(cur)
+        if parent == cur:  # reached filesystem root
+            return None
+        cur = parent
 
 # -------------------------------------------------------------------------
 # MAIN + TIMING
@@ -209,6 +224,10 @@ rule set_time_end:
         with open(output.end_file, "w") as fh:
             fh.write(str(time.time()))
 
+# -------------------------------------------------------------------------
+# GIT VERSION
+# -------------------------------------------------------------------------
+
 rule_name = "git_version"
 rule git_version:
     message:
@@ -223,25 +242,33 @@ rule git_version:
     output:
         git_hash = f"{component['name']}/git_hash.txt"
     run:
-        import subprocess, os
-
         snake_dir = os.path.dirname(workflow.snakefile)
+        repo_root = find_git_root(snake_dir)
 
-        # Best effort: get commit hash; if not a git repo, write "-"
+        print(f"DEBUG snake_dir: {snake_dir}")
+        print(f"DEBUG repo_root: {repo_root}")
+
         try:
-            git_hash = subprocess.check_output(
-                ["git", "-C", snake_dir, "rev-parse", "HEAD"],
-                stderr=subprocess.STDOUT,
-                text=True
-            ).strip()
+            if repo_root:
+                git_hash = subprocess.check_output(
+                    ["git", "-C", repo_root, "rev-parse", "HEAD"],
+                    stderr=subprocess.STDOUT,
+                    text=True
+                ).strip()
+                print(f"DEBUG git_hash: {git_hash}")
+            else:
+                print("DEBUG: No git repo found")
+                git_hash = "-"
         except Exception as e:
+            print(f"DEBUG git exception: {e}")
             git_hash = "-"
-            os.makedirs(os.path.dirname(log.err_file), exist_ok=True)
-            with open(log.err_file, "a") as fh:
-                fh.write(f"[git_version] Could not determine git hash from {snake_dir}: {e}\n")
 
         with open(output.git_hash, "w") as fh:
             fh.write(str(git_hash))
+
+# -------------------------------------------------------------------------
+# DUMP INFO
+# -------------------------------------------------------------------------
 
 rule dump_info:
     input:
