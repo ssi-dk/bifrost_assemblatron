@@ -49,6 +49,10 @@ onerror:
     if samplecomponent["status"] == "Running":
         common.set_status_and_save(sample, samplecomponent, "Failure")
 
+if not samplecomponent.has_requirements():
+   common.set_status_and_save(sample, samplecomponent, "Requirements not met")
+   raise SystemExit("Requirements not met")
+
 envvars:
     "BIFROST_INSTALL_DIR",
     "CONDA_PREFIX",
@@ -97,24 +101,6 @@ rule setup:
         samplecomponent["path"] = os.path.join(os.getcwd(), component["name"])
         samplecomponent.save()
 
-rule_name = "check_requirements"
-rule check_requirements:
-    message:
-        f"Running step:{rule_name}"
-    log:
-        out_file = f"{component['name']}/log/{rule_name}.out.log",
-        err_file = f"{component['name']}/log/{rule_name}.err.log",
-    benchmark:
-        f"{component['name']}/benchmarks/{rule_name}.benchmark"
-    input:
-        folder = rules.setup.output.init_file
-    output:
-        check_file = touch(f"{component['name']}/requirements_met")
-    run:
-        if samplecomponent.has_requirements():
-            #No need to write anything as the output is using touch to create the flag used to check the requirements
-            pass
-	    
 #* Dynamic section: start **************************************************************************
 
 rule_name = "assembly__spades"
@@ -127,7 +113,6 @@ rule assembly__spades:
     benchmark:
         f"{component['name']}/benchmarks/{rule_name}.benchmark"
     input:
-        rules.check_requirements.output.check_file,
         filtered_reads = sample["categories"]["trimmed_reads"]["summary"]["data"]
     output:
         outputdir = directory(f"{component['name']}/spades"),
