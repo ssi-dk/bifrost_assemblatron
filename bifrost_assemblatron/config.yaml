@@ -12,20 +12,17 @@ version:
 details:
   target: [sample]
   description: >
-    This does de-novo assembly on a sample and then maps the reads back against the denovo assembly
-    for variant calling. In the process it gathers metrics on many aspects for the use of QC. This
-    generates the same metrics as qcquickie but should yield better contigs and it is recommended
-    to use these contigs for downstream analysis.
+    This does de-novo assembly on a sample using SPAdes, and then filters them for minimum contig 
+    length. In the process it gathers metrics on many aspects for the use of QC. .
 #---------------------------------------------------------------------------------------------------
 
 #-Category info-------------------------------------------------------------------------------------
-category: [denovo_assembly, mapping_qc, contigs]
+category: [contigs]
 #---------------------------------------------------------------------------------------------------
 
 #-Install-------------------------------------------------------------------------------------------
 install:
   path: # Set by install program
-  dockerfile: docker://ssidk/bifrost_assemblatron
 #---------------------------------------------------------------------------------------------------
 
 #-Options-------------------------------------------------------------------------------------------
@@ -53,51 +50,30 @@ requirements:
 
 #-DB Value changes (excluding component output)-----------------------------------------------------
 db_values_changes:
-  files:
-    - assemblatron/contigs.fasta
-    - assemblatron/contigs.pileup
-    - assemblatron/contigs.sketch
-    - assemblatron/contigs.stats
-    - assemblatron/contigs.sum.cov
-    - assemblatron/contigs.variants
+  files: []
   sample:
-    properties:
-      denovo_assembly:
+    categories:
+      contigs:
         summary:  # see sample_component summary
         component:
           _id: 
           date:  # ObjectId
-    report:
   sample_component:
-      summary:
-        bin_contigs_at_1x:
-        bin_length_at_1x:
-        bin_coverage_at_1x:
-        bin_contigs_at_10x:
-        bin_length_at_10x:
-        bin_coverage_at_10x:
-        bin_contigs_at_25x:
-        bin_length_at_25x:
-        bin_coverage_at_25x:
-        raw_length_at_1x:
-        raw_length_at_10x:
-        raw_length_at_25x:
-        filtered_reads_num:
-        GC:
-        N50:
-        snp_filter_10x_10%:
-        snp_filter_indels:
-        snp_filter_deletions:
-        raw_total_sequences:
-        reads_mapped:
-        reads_unmapped:
-        insert_size_average:
-        insert_size_standard_deviation:
-      results:
-        assemblatron/contigs_sum_cov: {}
-        assemblatron/contigs_bin_cov: {}
-        assemblatron/log/setup__filter_reads_with_bbduk_err_log: {}
-        assemblatron/quast/report_tsv: {}
-        assemblatron/contigs_variants: {}
-        assemblatron/contigs_stats: {}
+    Category:
+      contigs:
+        summary:
+          data:
+          type:
+          contigs_10x:
+          length_10x:
+          N50_10x:
+          coverage_10x:
+          contigs_1x:
+          length_1x:
+          N50_1x:
+          coverage_1x:
+          contigs_0x:
+          length_0x:
+          N50_0x:
+          coverage_0x:
 #---------------------------------------------------------------------------------------------------
