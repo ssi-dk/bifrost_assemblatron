@@ -171,8 +171,8 @@ rule assembly_qc:
         failed_length_statistics = f"{component['name']}/{sample['name']}_below500bp_stat.tsv",
     params:
         sample_name = sample["display_name"],
-        cov_threshold = 10,
-        min_length = 500,
+        cov_threshold = component['options']['cov_threshold'],
+        min_length = component['options']['min_length'],
         passed_prefix = f"{component['name']}/{sample['name']}_above10x",
         failed_cov_prefix = f"{component['name']}/{sample['name']}_below1x",
         low_cov_prefix = f"{component['name']}/{sample['name']}_above1x",
