@@ -45,6 +45,9 @@ requirements:
       paired_reads:
         summary:
           data:
+      size_check:
+        summary:
+          has_min_num_of_reads: true
 #---------------------------------------------------------------------------------------------------
 
 #-DB Value changes (excluding component output)-----------------------------------------------------
